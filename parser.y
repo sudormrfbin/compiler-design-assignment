@@ -4,42 +4,57 @@
 
 %{
 #include <stdio.h>
+#include "ast.h"
 
-int yyerror(const char *s) {
-  fprintf(stderr, "error: %s\n", s);
-}
+// int yyerror(const char *s) {
+//   fprintf(stderr, "error: %s\n", s);
+// }
 
 int yylex();
 
 %}
 
-%token NUMBER
-%token ADD SUB MUL DIV ABS
+%union {
+  Ast *ast;
+  double number;
+}
+
+%token <number> NUMBER
 %token EOL
+
+%type <ast> exp factor term
 
 %%
 
 calclist: /* nothing */
-  | calclist exp EOL { printf("= %d\n", $2); }
+  | calclist exp EOL {
+      printf("= %4.4g\n", eval($exp)); 
+      treefree($exp);
+      printf("> ");
+  }
+  | calclist EOL { printf("> "); } /* blank line or comment */
   ;
 
 exp: factor
-  | exp ADD factor { $$ = $1 + $3; }
-  | exp SUB factor { $$ = $1 - $3; }
+  | exp '+' factor { $$ = newast('+', $1, $3); }
+  | exp '-' factor { $$ = newast('-', $1, $3); }
   ;
 
 factor: term
-  | factor MUL term { $$ = $1 * $3; }
-  | factor DIV term { $$ = $1 / $3; }
+  | factor '*' term { $$ = newast('*', $1, $3); }
+  | factor '/' term { $$ = newast('/', $1, $3); }
   ;
 
-term: NUMBER
-  | ABS term { $$ = $2 >= 0 ? $2 : - $2; }
+term:
+  NUMBER        { $$ = newnum($1);               }
+  | '|' term    { $$ = newast('|', $2, NULL); }
+  | '-' term    { $$ = newast('M', $2, NULL); }
+  | '(' exp ')' { $$ = $exp;                     }
   ;
 
 %%
 
-int main(int argc, char **argv) {
+// int main(int argc, char **argv) {
   // if a file is given as command line argument, set input
   // to file contents.
   // if (argc > 1) {
@@ -49,6 +64,6 @@ int main(int argc, char **argv) {
   //   }
   // }
 
-  yyparse();
-}
+  // yyparse();
+// }
 

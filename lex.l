@@ -4,24 +4,33 @@ finishes reading the input. It controls whether or not to
 lex another input file, and since we only read one file,
 we disable this functionality using noyywrap.
 */
-%option noyywrap
+%option noyywrap nodefault yylineno
 
 %{
 
+#include "ast.h"
 #include "parser.tab.h"
 
 %}
 
 %%
 
-"+"     { return ADD; }
-"-"     { return SUB; }
-"*"     { return MUL; }
-"/"     { return DIV; }
-"|"     { return ABS; }
-[0-9]+  { yylval = atoi(yytext); return NUMBER; }
-\n      { return EOL; }
+"+" |
+"-" |
+"*" |
+"/" |
+"|" |
+"(" |
+")"     { return yytext[0];       }
+\n      { return EOL;             }
 [ \t]   { /* ignore whitespace */ }
+"//".+  { /* ignore comments   */ }
+
+[0-9]+("."[0-9]+)?  {
+    yylval.number = atof(yytext);
+    return NUMBER; 
+  }
+
 .       { printf("Mystery character %c\n", *yytext); }
 
 %%
