@@ -22,8 +22,6 @@ datatype(
 );
 
 Ast* ast_alloc(Ast ast);
-// Ast* ast_new_binary(Ast* left, BinaryOp op, Ast* right);
-// Ast* ast_new_number(double number);
 
 double eval(Ast *);
 

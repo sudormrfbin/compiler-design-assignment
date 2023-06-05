@@ -55,7 +55,8 @@ extern int yydebug;
     YYerror = 256,                 /* error  */
     YYUNDEF = 257,                 /* "invalid token"  */
     NUMBER = 258,                  /* NUMBER  */
-    EOL = 259                      /* EOL  */
+    EOL = 259,                     /* EOL  */
+    UMINUS = 260                   /* UMINUS  */
   };
   typedef enum yytokentype yytoken_kind_t;
 #endif
@@ -69,7 +70,7 @@ union YYSTYPE
   Ast *ast;
   double number;
 
-#line 73 "parser.tab.h"
+#line 74 "parser.tab.h"
 
 };
 typedef union YYSTYPE YYSTYPE;

@@ -20,26 +20,6 @@ Ast* ast_alloc(Ast ast) {
   return alloc;
 }
 
-// Ast* ast_new_binary(Ast *left, BinaryOp op, Ast *right) {
-//   Ast *ast = ast_new();
-
-//   ast->type = AstType_BinaryOp;
-//   ast->as.binary.left = left;
-//   ast->as.binary.op = op;
-//   ast->as.binary.right = right;
-
-//   return ast;
-// }
-
-// Ast* ast_new_number(double number) {
-//   Ast *ast = ast_new();
-
-//   ast->type = AstType_Number;
-//   ast->as.number = number;
-
-//   return ast;
-// }
-
 double eval(Ast* ast) {
   match(*ast) {
     of(BinaryAExpr, left, op, right) {
