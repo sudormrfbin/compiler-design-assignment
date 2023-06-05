@@ -54,9 +54,18 @@ extern int yydebug;
     YYEOF = 0,                     /* "end of file"  */
     YYerror = 256,                 /* error  */
     YYUNDEF = 257,                 /* "invalid token"  */
-    NUMBER = 258,                  /* NUMBER  */
-    EOL = 259,                     /* EOL  */
-    UMINUS = 260                   /* UMINUS  */
+    EOL = 258,                     /* EOL  */
+    GT = 259,                      /* GT  */
+    GTE = 260,                     /* GTE  */
+    LT = 261,                      /* LT  */
+    LTE = 262,                     /* LTE  */
+    AND = 263,                     /* AND  */
+    OR = 264,                      /* OR  */
+    EQEQ = 265,                    /* EQEQ  */
+    TRUE = 266,                    /* TRUE  */
+    FALSE = 267,                   /* FALSE  */
+    NUMBER = 268,                  /* NUMBER  */
+    UMINUS = 269                   /* UMINUS  */
   };
   typedef enum yytokentype yytoken_kind_t;
 #endif
@@ -65,12 +74,14 @@ extern int yydebug;
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
 union YYSTYPE
 {
-#line 17 "parser.y"
+#line 18 "parser.y"
 
-  ArithExpr *ast;
+  ArithExpr *arith_expr;
+  BoolExpr *bool_expr;
+  Expr *expr;
   double number;
 
-#line 74 "parser.tab.h"
+#line 85 "parser.tab.h"
 
 };
 typedef union YYSTYPE YYSTYPE;
