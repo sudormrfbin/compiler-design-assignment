@@ -29,26 +29,25 @@ int yylex();
 calclist: /* nothing */
   | calclist exp EOL {
       printf("= %4.4g\n", eval($exp)); 
-      treefree($exp);
+      ast_free($exp);
       printf("> ");
   }
   | calclist EOL { printf("> "); } /* blank line or comment */
   ;
 
 exp: factor
-  | exp '+' factor { $$ = newast('+', $1, $3); }
-  | exp '-' factor { $$ = newast('-', $1, $3); }
+  | exp '+' factor { $$ = ast_new_binary($1, BinaryOp_Add, $3); }
+  | exp '-' factor { $$ = ast_new_binary($1, BinaryOp_Sub, $3); }
   ;
 
 factor: term
-  | factor '*' term { $$ = newast('*', $1, $3); }
-  | factor '/' term { $$ = newast('/', $1, $3); }
+  | factor '*' term { $$ = ast_new_binary($1, BinaryOp_Mul, $3); }
+  | factor '/' term { $$ = ast_new_binary($1, BinaryOp_Div, $3); }
   ;
 
 term:
-  NUMBER        { $$ = newnum($1);               }
-  | '|' term    { $$ = newast('|', $2, NULL); }
-  | '-' term    { $$ = newast('M', $2, NULL); }
+  NUMBER        { $$ = ast_new_number($1);               }
+  | '-' term    { $$ = ast_new_binary($2, BinaryOp_Sub, NULL); }
   | '(' exp ')' { $$ = $exp;                     }
   ;
 

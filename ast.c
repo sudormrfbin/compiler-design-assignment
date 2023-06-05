@@ -11,61 +11,61 @@ void ensure_non_null(void *ptr, char *msg) {
   }
 }
 
-Ast* newast(int nodetype, Ast *left, Ast *right) {
+Ast* ast_new() {
   Ast *ast = malloc(sizeof(Ast));
   ensure_non_null(ast, "out of space");
+  return ast;
+}
 
-  ast->nodetype = nodetype;
-  ast->left = left;
-  ast->right = right;
+Ast* ast_new_binary(Ast *left, BinaryOp op, Ast *right) {
+  Ast *ast = ast_new();
+
+  ast->type = AstType_BinaryOp;
+  ast->as.binary.left = left;
+  ast->as.binary.op = op;
+  ast->as.binary.right = right;
 
   return ast;
 }
 
-Ast* newnum(double number) {
-  NumVal *val = malloc(sizeof(NumVal));
-  ensure_non_null(val, "out of space");
+Ast* ast_new_number(double number) {
+  Ast *ast = ast_new();
 
-  val->nodetype = 'K';
-  val->number = number;
+  ast->type = AstType_Number;
+  ast->as.number = number;
 
-  return (Ast*)val;
+  return ast;
 }
 
 double eval(Ast* ast) {
-  double result;
-
-  switch (ast->nodetype) {
-    case 'K': result = ((NumVal*)ast)->number; break;
-    case '+': result = eval(ast->left) + eval(ast->right); break;
-    case '-': result = eval(ast->left) - eval(ast->right); break;
-    case '*': result = eval(ast->left) * eval(ast->right); break;
-    case '/': result = eval(ast->left) / eval(ast->right); break;
-    case '|': result = eval(ast->left); if (result < 0) result = -result; break;
-    case 'M': result = -eval(ast->left); break;
-    default: printf("intenral error: bad node %c\n", ast->nodetype);
+  switch (ast->type) {
+    case AstType_BinaryOp: {
+      AstNodeBinary node = ast->as.binary;
+      switch (ast->as.binary.op) {
+        case BinaryOp_Add: return eval(node.left) + eval(node.right);
+        case BinaryOp_Sub: return eval(node.left) - eval(node.right);
+        case BinaryOp_Mul: return eval(node.left) * eval(node.right);
+        case BinaryOp_Div: return eval(node.left) / eval(node.right);
+      }
+      break;
+    }
+    case AstType_Number: return ast->as.number;
   }
 
-  return result;
+  return -1; // unreachable
 }
 
-void treefree(Ast* ast) {
-  switch (ast->nodetype) {
-    // two subtrees
-    case '+':
-    case '-':
-    case '*':
-    case '/': 
-      treefree(ast->right);
-    // one subtree
-    case '|':
-    case 'M':
-      treefree(ast->left);
-    case 'K':
-      free(ast);
+void ast_free(Ast* ast) {
+  switch (ast->type) {
+    case AstType_BinaryOp:
+      ast_free(ast->as.binary.left);
+      ast_free(ast->as.binary.right);
       break;
-    default: printf("internal error: free bad node %c\n", ast->nodetype);
+    case AstType_Number:
+        break;
   }
+
+  free(ast);
 }
 
 void yyerror(const char *s, ...) {

@@ -1,22 +1,38 @@
 extern int yylineno;
 void yyerror(const char *, ...);
 
-struct Ast {
-  int nodetype;
-  struct Ast *left;
-  struct Ast *right;
-};
-
 typedef struct Ast Ast ;
 
-typedef struct {
-  int nodetype;
-  double number;
-} NumVal;
+typedef enum {
+  AstType_BinaryOp,
+  AstType_Number,
+} AstType;
 
-Ast *newast(int nodetype, Ast *left, Ast *right);
-Ast *newnum(double d);
+typedef enum {
+  BinaryOp_Add,
+  BinaryOp_Sub,
+  BinaryOp_Mul,
+  BinaryOp_Div,
+} BinaryOp;
+
+typedef struct {
+  Ast* left;
+  BinaryOp op;
+  Ast* right;
+} AstNodeBinary;
+
+struct Ast {
+  AstType type;
+  union {
+    AstNodeBinary binary;
+    double number;
+  } as;
+};
+
+Ast* ast_new();
+Ast* ast_new_binary(Ast* left, BinaryOp op, Ast* right);
+Ast* ast_new_number(double number);
 
 double eval(Ast *);
 
-void treefree(Ast *);
+void ast_free(Ast *);

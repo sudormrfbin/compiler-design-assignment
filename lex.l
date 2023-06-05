@@ -4,7 +4,7 @@ finishes reading the input. It controls whether or not to
 lex another input file, and since we only read one file,
 we disable this functionality using noyywrap.
 */
-%option noyywrap nodefault yylineno
+%option noyywrap nodefault yylineno nounput noinput
 
 %{
 
@@ -19,7 +19,6 @@ we disable this functionality using noyywrap.
 "-" |
 "*" |
 "/" |
-"|" |
 "(" |
 ")"     { return yytext[0];       }
 \n      { return EOL;             }
