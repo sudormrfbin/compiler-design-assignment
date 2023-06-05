@@ -22,7 +22,7 @@ int yylex();
 %token <number> NUMBER
 %token EOL
 
-%type <ast> exp
+%type <ast> aexpr
 
 /* Explicitly declare precedence instead of implicitly doing it
    through the grammar.
@@ -34,21 +34,22 @@ int yylex();
 %%
 
 calclist: /* nothing */
-  | calclist exp EOL {
-      printf("= %4.4g\n", eval($exp)); 
-      ast_free($exp);
+  | calclist aexpr EOL {
+      printf("= %4.4g\n", eval($aexpr)); 
+      ast_free($aexpr);
       printf("> ");
   }
   | calclist EOL { printf("> "); } /* blank line or comment */
   ;
 
-exp: exp '+' exp { $$ = ast_alloc(BinaryAExpr($1, BinaryOp_Add, $3)); }
-  | exp '-' exp  { $$ = ast_alloc(BinaryAExpr($1, BinaryOp_Sub, $3)); }
-  | exp '*' exp  { $$ = ast_alloc(BinaryAExpr($1, BinaryOp_Mul, $3)); }
-  | exp '/' exp  { $$ = ast_alloc(BinaryAExpr($1, BinaryOp_Div, $3)); }
-  | '-' exp %prec UMINUS { $$ = ast_alloc(UnaryAExpr(UnaryOp_Minus, $2));     }
-  | '(' exp ')'  { $$ = $2;                                         }
-  | NUMBER       { $$ = ast_alloc(Number($1));                        }
+/* Arithmetic expression */
+aexpr: aexpr '+' aexpr { $$ = ast_alloc(BinaryAExpr($1, BinaryOp_Add, $3)); }
+  | aexpr '-' aexpr    { $$ = ast_alloc(BinaryAExpr($1, BinaryOp_Sub, $3)); }
+  | aexpr '*' aexpr    { $$ = ast_alloc(BinaryAExpr($1, BinaryOp_Mul, $3)); }
+  | aexpr '/' aexpr    { $$ = ast_alloc(BinaryAExpr($1, BinaryOp_Div, $3)); }
+  | '-' aexpr %prec UMINUS { $$ = ast_alloc(UnaryAExpr(UnaryOp_Minus, $2)); }
+  | '(' aexpr ')'      { $$ = $2;                                           }
+  | NUMBER             { $$ = ast_alloc(Number($1));                        }
   ;
 
 %%
