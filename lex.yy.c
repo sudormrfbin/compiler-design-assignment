@@ -788,22 +788,22 @@ YY_RULE_SETUP
 case 7:
 /* rule 7 can match eol */
 YY_RULE_SETUP
-#line 24 "lex.l"
+#line 25 "lex.l"
 { return EOL;             }
 	YY_BREAK
 case 8:
 YY_RULE_SETUP
-#line 25 "lex.l"
+#line 26 "lex.l"
 { /* ignore whitespace */ }
 	YY_BREAK
 case 9:
 YY_RULE_SETUP
-#line 26 "lex.l"
+#line 27 "lex.l"
 { /* ignore comments   */ }
 	YY_BREAK
 case 10:
 YY_RULE_SETUP
-#line 28 "lex.l"
+#line 29 "lex.l"
 {
     yylval.number = atof(yytext);
     return NUMBER; 
@@ -811,12 +811,12 @@ YY_RULE_SETUP
 	YY_BREAK
 case 11:
 YY_RULE_SETUP
-#line 33 "lex.l"
+#line 34 "lex.l"
 { printf("Mystery character %c\n", *yytext); }
 	YY_BREAK
 case 12:
 YY_RULE_SETUP
-#line 35 "lex.l"
+#line 36 "lex.l"
 YY_FATAL_ERROR( "flex scanner jammed" );
 	YY_BREAK
 #line 822 "lex.yy.c"
@@ -1795,6 +1795,6 @@ void yyfree (void * ptr )
 
 #define YYTABLES_NAME "yytables"
 
-#line 35 "lex.l"
+#line 36 "lex.l"
 
 

@@ -1314,37 +1314,37 @@ yyreduce:
 
   case 6: /* exp: exp '+' factor  */
 #line 39 "parser.y"
-                   { (yyval.ast) = ast_new_binary((yyvsp[-2].ast), BinaryOp_Add, (yyvsp[0].ast)); }
+                   { (yyval.ast) = ast_alloc(BinaryAExpr((yyvsp[-2].ast), BinaryOp_Add, (yyvsp[0].ast))); }
 #line 1319 "parser.tab.c"
     break;
 
   case 7: /* exp: exp '-' factor  */
 #line 40 "parser.y"
-                   { (yyval.ast) = ast_new_binary((yyvsp[-2].ast), BinaryOp_Sub, (yyvsp[0].ast)); }
+                   { (yyval.ast) = ast_alloc(BinaryAExpr((yyvsp[-2].ast), BinaryOp_Sub, (yyvsp[0].ast))); }
 #line 1325 "parser.tab.c"
     break;
 
   case 9: /* factor: factor '*' term  */
 #line 44 "parser.y"
-                    { (yyval.ast) = ast_new_binary((yyvsp[-2].ast), BinaryOp_Mul, (yyvsp[0].ast)); }
+                    { (yyval.ast) = ast_alloc(BinaryAExpr((yyvsp[-2].ast), BinaryOp_Mul, (yyvsp[0].ast))); }
 #line 1331 "parser.tab.c"
     break;
 
   case 10: /* factor: factor '/' term  */
 #line 45 "parser.y"
-                    { (yyval.ast) = ast_new_binary((yyvsp[-2].ast), BinaryOp_Div, (yyvsp[0].ast)); }
+                    { (yyval.ast) = ast_alloc(BinaryAExpr((yyvsp[-2].ast), BinaryOp_Div, (yyvsp[0].ast))); }
 #line 1337 "parser.tab.c"
     break;
 
   case 11: /* term: NUMBER  */
 #line 49 "parser.y"
-                { (yyval.ast) = ast_new_number((yyvsp[0].number));               }
+                { (yyval.ast) = ast_alloc(Number((yyvsp[0].number)));               }
 #line 1343 "parser.tab.c"
     break;
 
   case 12: /* term: '-' term  */
 #line 50 "parser.y"
-                { (yyval.ast) = ast_new_binary((yyvsp[0].ast), BinaryOp_Sub, NULL); }
+                { (yyval.ast) = ast_alloc(UnaryAExpr(UnaryOp_Minus, (yyvsp[0].ast))); }
 #line 1349 "parser.tab.c"
     break;
 

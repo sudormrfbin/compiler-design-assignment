@@ -21,6 +21,7 @@ we disable this functionality using noyywrap.
 "/" |
 "(" |
 ")"     { return yytext[0];       }
+
 \n      { return EOL;             }
 [ \t]   { /* ignore whitespace */ }
 "//".+  { /* ignore comments   */ }

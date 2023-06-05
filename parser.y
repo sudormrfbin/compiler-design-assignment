@@ -36,18 +36,18 @@ calclist: /* nothing */
   ;
 
 exp: factor
-  | exp '+' factor { $$ = ast_new_binary($1, BinaryOp_Add, $3); }
-  | exp '-' factor { $$ = ast_new_binary($1, BinaryOp_Sub, $3); }
+  | exp '+' factor { $$ = ast_alloc(BinaryAExpr($1, BinaryOp_Add, $3)); }
+  | exp '-' factor { $$ = ast_alloc(BinaryAExpr($1, BinaryOp_Sub, $3)); }
   ;
 
 factor: term
-  | factor '*' term { $$ = ast_new_binary($1, BinaryOp_Mul, $3); }
-  | factor '/' term { $$ = ast_new_binary($1, BinaryOp_Div, $3); }
+  | factor '*' term { $$ = ast_alloc(BinaryAExpr($1, BinaryOp_Mul, $3)); }
+  | factor '/' term { $$ = ast_alloc(BinaryAExpr($1, BinaryOp_Div, $3)); }
   ;
 
 term:
-  NUMBER        { $$ = ast_new_number($1);               }
-  | '-' term    { $$ = ast_new_binary($2, BinaryOp_Sub, NULL); }
+  NUMBER        { $$ = ast_alloc(Number($1));               }
+  | '-' term    { $$ = ast_alloc(UnaryAExpr(UnaryOp_Minus, $2)); }
   | '(' exp ')' { $$ = $exp;                     }
   ;
 
