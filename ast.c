@@ -13,14 +13,14 @@ void ensure_non_null(void *ptr, char *msg) {
   }
 }
 
-Ast* ast_alloc(Ast ast) {
-  Ast *alloc = malloc(sizeof(Ast));
+ArithExpr* ast_alloc(ArithExpr ast) {
+  ArithExpr *alloc = malloc(sizeof(ArithExpr));
   ensure_non_null(alloc, "out of space");
   memcpy(alloc, &ast, sizeof(ast));
   return alloc;
 }
 
-double eval(Ast* ast) {
+double eval(ArithExpr* ast) {
   match(*ast) {
     of(BinaryAExpr, left, op, right) {
       switch (*op) {
@@ -41,7 +41,7 @@ double eval(Ast* ast) {
   return -1; // unreachable
 }
 
-void ast_free(Ast* ast) {
+void ast_free(ArithExpr* ast) {
   match(*ast) {
     of(BinaryAExpr, left, _, right) {
       ast_free(*left);

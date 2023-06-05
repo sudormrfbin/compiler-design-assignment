@@ -121,7 +121,7 @@ enum yysymbol_kind_t
   YYSYMBOL_11_ = 11,                       /* ')'  */
   YYSYMBOL_YYACCEPT = 12,                  /* $accept  */
   YYSYMBOL_calclist = 13,                  /* calclist  */
-  YYSYMBOL_aexp = 14                       /* aexp  */
+  YYSYMBOL_aexpr = 14                      /* aexpr  */
 };
 typedef enum yysymbol_kind_t yysymbol_kind_t;
 
@@ -508,8 +508,8 @@ static const yytype_int8 yytranslate[] =
 /* YYRLINE[YYN] -- Source line where rule number YYN was defined.  */
 static const yytype_int8 yyrline[] =
 {
-       0,    36,    36,    37,    42,    45,    46,    47,    48,    49,
-      50,    51
+       0,    36,    36,    37,    42,    46,    47,    48,    49,    50,
+      51,    52
 };
 #endif
 
@@ -527,7 +527,7 @@ yysymbol_name (yysymbol_kind_t yysymbol)
   static const char *const yy_sname[] =
   {
   "end of file", "error", "invalid token", "NUMBER", "EOL", "'-'", "'+'",
-  "'*'", "'/'", "UMINUS", "'('", "')'", "$accept", "calclist", "aexp", YY_NULLPTR
+  "'*'", "'/'", "UMINUS", "'('", "')'", "$accept", "calclist", "aexpr", YY_NULLPTR
   };
   return yy_sname[yysymbol];
 }
@@ -1292,9 +1292,9 @@ yyreduce:
   YY_REDUCE_PRINT (yyn);
   switch (yyn)
     {
-  case 3: /* calclist: calclist aexp EOL  */
+  case 3: /* calclist: calclist aexpr EOL  */
 #line 37 "parser.y"
-                      {
+                       {
       printf("= %4.4g\n", eval((yyvsp[-1].ast))); 
       ast_free((yyvsp[-1].ast));
       printf("> ");
@@ -1308,45 +1308,45 @@ yyreduce:
 #line 1309 "parser.tab.c"
     break;
 
-  case 5: /* aexp: aexp '+' aexp  */
-#line 45 "parser.y"
-                    { (yyval.ast) = ast_alloc(BinaryAExpr((yyvsp[-2].ast), BinaryOp_Add, (yyvsp[0].ast))); }
+  case 5: /* aexpr: aexpr '+' aexpr  */
+#line 46 "parser.y"
+                       { (yyval.ast) = ast_alloc(BinaryAExpr((yyvsp[-2].ast), BinaryOp_Add, (yyvsp[0].ast))); }
 #line 1315 "parser.tab.c"
     break;
 
-  case 6: /* aexp: aexp '-' aexp  */
-#line 46 "parser.y"
-                   { (yyval.ast) = ast_alloc(BinaryAExpr((yyvsp[-2].ast), BinaryOp_Sub, (yyvsp[0].ast))); }
+  case 6: /* aexpr: aexpr '-' aexpr  */
+#line 47 "parser.y"
+                       { (yyval.ast) = ast_alloc(BinaryAExpr((yyvsp[-2].ast), BinaryOp_Sub, (yyvsp[0].ast))); }
 #line 1321 "parser.tab.c"
     break;
 
-  case 7: /* aexp: aexp '*' aexp  */
-#line 47 "parser.y"
-                   { (yyval.ast) = ast_alloc(BinaryAExpr((yyvsp[-2].ast), BinaryOp_Mul, (yyvsp[0].ast))); }
+  case 7: /* aexpr: aexpr '*' aexpr  */
+#line 48 "parser.y"
+                       { (yyval.ast) = ast_alloc(BinaryAExpr((yyvsp[-2].ast), BinaryOp_Mul, (yyvsp[0].ast))); }
 #line 1327 "parser.tab.c"
     break;
 
-  case 8: /* aexp: aexp '/' aexp  */
-#line 48 "parser.y"
-                   { (yyval.ast) = ast_alloc(BinaryAExpr((yyvsp[-2].ast), BinaryOp_Div, (yyvsp[0].ast))); }
+  case 8: /* aexpr: aexpr '/' aexpr  */
+#line 49 "parser.y"
+                       { (yyval.ast) = ast_alloc(BinaryAExpr((yyvsp[-2].ast), BinaryOp_Div, (yyvsp[0].ast))); }
 #line 1333 "parser.tab.c"
     break;
 
-  case 9: /* aexp: '-' aexp  */
-#line 49 "parser.y"
-                          { (yyval.ast) = ast_alloc(UnaryAExpr(UnaryOp_Minus, (yyvsp[0].ast)));     }
+  case 9: /* aexpr: '-' aexpr  */
+#line 50 "parser.y"
+                           { (yyval.ast) = ast_alloc(UnaryAExpr(UnaryOp_Minus, (yyvsp[0].ast))); }
 #line 1339 "parser.tab.c"
     break;
 
-  case 10: /* aexp: '(' aexp ')'  */
-#line 50 "parser.y"
-                  { (yyval.ast) = (yyvsp[-1].ast);                                         }
+  case 10: /* aexpr: '(' aexpr ')'  */
+#line 51 "parser.y"
+                       { (yyval.ast) = (yyvsp[-1].ast);                                           }
 #line 1345 "parser.tab.c"
     break;
 
-  case 11: /* aexp: NUMBER  */
-#line 51 "parser.y"
-                 { (yyval.ast) = ast_alloc(Number((yyvsp[0].number)));                        }
+  case 11: /* aexpr: NUMBER  */
+#line 52 "parser.y"
+                       { (yyval.ast) = ast_alloc(Number((yyvsp[0].number)));                        }
 #line 1351 "parser.tab.c"
     break;
 
@@ -1575,5 +1575,5 @@ yyreturnlab:
   return yyresult;
 }
 
-#line 54 "parser.y"
+#line 55 "parser.y"
 

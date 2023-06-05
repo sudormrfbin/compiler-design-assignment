@@ -15,14 +15,14 @@ typedef enum {
 } UnaryOp;
 
 datatype(
-  Ast,
-  (BinaryAExpr, Ast *, BinaryOp, Ast *),
-  (UnaryAExpr, UnaryOp, Ast *),
+  ArithExpr,
+  (BinaryAExpr, ArithExpr *, BinaryOp, ArithExpr *),
+  (UnaryAExpr, UnaryOp, ArithExpr *),
   (Number, double)
 );
 
-Ast* ast_alloc(Ast ast);
+ArithExpr* ast_alloc(ArithExpr ast);
 
-double eval(Ast *);
+double eval(ArithExpr *);
 
-void ast_free(Ast *);
+void ast_free(ArithExpr *);

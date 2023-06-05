@@ -15,7 +15,7 @@ int yylex();
 %}
 
 %union {
-  Ast *ast;
+  ArithExpr *ast;
   double number;
 }
 

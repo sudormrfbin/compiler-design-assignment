@@ -67,7 +67,7 @@ union YYSTYPE
 {
 #line 17 "parser.y"
 
-  Ast *ast;
+  ArithExpr *ast;
   double number;
 
 #line 74 "parser.tab.h"
