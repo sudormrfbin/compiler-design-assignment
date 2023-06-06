@@ -47,9 +47,16 @@ datatype(
 );
 
 datatype(
+  StrExpr,
+  (String, char*),
+  (StringConcat, StrExpr*, StrExpr*)
+);
+
+datatype(
   Expr,
   (BooleanExpr, BoolExpr *),
-  (ArithmeticExpr, ArithExpr *)
+  (ArithmeticExpr, ArithExpr *),
+  (StringExpr, StrExpr *)
 );
 
 typedef BoolExpr Condition;
@@ -82,7 +89,8 @@ datatype(
 datatype(
   ExprResult,
   (BooleanResult, bool),
-  (NumberResult, double)
+  (NumberResult, double),
+  (StringResult, char*)
 );
 
 // TODO: Rename to alloc_* and free_*
@@ -95,6 +103,11 @@ BoolExpr* bexpr_alloc(BoolExpr ast);
 bool eval_bexpr(BoolExpr* ast);
 void ast_free_bexpr(BoolExpr* ast);
 void print_bexpr(BoolExpr* ast, int indent);
+
+StrExpr* sexpr_alloc(StrExpr ast);
+char* eval_sexpr(StrExpr* ast);
+void ast_free_sexpr(StrExpr* ast);
+void print_sexpr(StrExpr* ast, int indent);
 
 Expr* expr_alloc(Expr ast);
 ExprResult eval_expr(Expr *);

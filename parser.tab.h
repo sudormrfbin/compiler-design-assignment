@@ -55,21 +55,22 @@ extern int yydebug;
     YYerror = 256,                 /* error  */
     YYUNDEF = 257,                 /* "invalid token"  */
     NUMBER = 258,                  /* NUMBER  */
-    EOL = 259,                     /* EOL  */
-    GT = 260,                      /* GT  */
-    GTE = 261,                     /* GTE  */
-    LT = 262,                      /* LT  */
-    LTE = 263,                     /* LTE  */
-    AND = 264,                     /* AND  */
-    OR = 265,                      /* OR  */
-    EQEQ = 266,                    /* EQEQ  */
-    TRUE = 267,                    /* TRUE  */
-    FALSE = 268,                   /* FALSE  */
-    DISPLAY = 269,                 /* DISPLAY  */
-    IF = 270,                      /* IF  */
-    THEN = 271,                    /* THEN  */
-    ENDIF = 272,                   /* ENDIF  */
-    UMINUS = 273                   /* UMINUS  */
+    STRING = 259,                  /* STRING  */
+    EOL = 260,                     /* EOL  */
+    GT = 261,                      /* GT  */
+    GTE = 262,                     /* GTE  */
+    LT = 263,                      /* LT  */
+    LTE = 264,                     /* LTE  */
+    AND = 265,                     /* AND  */
+    OR = 266,                      /* OR  */
+    EQEQ = 267,                    /* EQEQ  */
+    TRUE = 268,                    /* TRUE  */
+    FALSE = 269,                   /* FALSE  */
+    DISPLAY = 270,                 /* DISPLAY  */
+    IF = 271,                      /* IF  */
+    THEN = 272,                    /* THEN  */
+    ENDIF = 273,                   /* ENDIF  */
+    UMINUS = 274                   /* UMINUS  */
   };
   typedef enum yytokentype yytoken_kind_t;
 #endif
@@ -80,14 +81,16 @@ union YYSTYPE
 {
 #line 18 "parser.y"
 
+  StrExpr *str_expr;
   ArithExpr *arith_expr;
   BoolExpr *bool_expr;
   Expr *expr;
   Stmt *stmt;
   StatementList *statement_list;
   double number;
+  char* string;
 
-#line 91 "parser.tab.h"
+#line 94 "parser.tab.h"
 
 };
 typedef union YYSTYPE YYSTYPE;

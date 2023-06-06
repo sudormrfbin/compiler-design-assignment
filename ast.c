@@ -29,6 +29,7 @@ ALLOC_NODE(BoolExpr, bexpr)
 ALLOC_NODE(Expr, expr)
 ALLOC_NODE(Stmt, stmt)
 ALLOC_NODE(Ast, ast)
+ALLOC_NODE(StrExpr, sexpr)
 
 StatementList* stmt_list_alloc() {
   StatementList* alloc = malloc(sizeof(StatementList));
@@ -127,6 +128,7 @@ ExprResult eval_expr(Expr* expr) {
   match (*expr) {
     of(BooleanExpr, bexpr) return BooleanResult(eval_bexpr(*bexpr));
     of(ArithmeticExpr, aexpr) return NumberResult(eval_aexpr(*aexpr));
+    of(StringExpr, sexpr) return StringResult(eval_sexpr(*sexpr));
   }
 
   return BooleanResult(false); // unreachable
@@ -139,6 +141,7 @@ void eval_stmt(Stmt* stmt) {
       match(result) {
         of(BooleanResult, boolean) printf("%s\n", *boolean ? "true" : "false");
         of(NumberResult, number) printf("%g\n", *number);
+        of(StringResult, string) printf("%s\n", *string);
       }
     }
     of(ExprStmt, expr) eval_expr(*expr); 
@@ -194,6 +197,7 @@ void ast_free_expr(Expr* ast) {
   match (*ast) {
     of(BooleanExpr, bexpr) ast_free_bexpr(*bexpr);
     of(ArithmeticExpr, aexpr) ast_free_aexpr(*aexpr);
+    of(StringExpr, sexpr) ast_free_sexpr(*sexpr);
   }
 
   free(ast);
@@ -328,6 +332,11 @@ void print_expr(Expr* ast, int ind) {
       print_aexpr(*aexpr, ind + 1);
       iprintf(ind, ")\n");
     }
+    of(StringExpr, sexpr) {
+      iprintf(ind, "StringExpression(\n");
+      print_sexpr(*sexpr, ind + 1);
+      iprintf(ind, ")\n");
+    }
   }
 }
 
@@ -367,6 +376,45 @@ void print_stmt_list(StatementList* start, int ind) {
     iprintf(ind, ")\n");
 
     curr = curr->next;
+  }
+}
+
+char* eval_sexpr(StrExpr* ast) {
+  match (*ast) {
+    of(StringConcat, first, second) {
+      char* left = eval_sexpr(*first);
+      char* right = eval_sexpr(*second);
+
+      int size = strlen(left) + strlen(right) + 1;
+      char* new = malloc(size);
+      snprintf(new, size, "%s%s", left, right);
+      return new;
+    }
+    of(String, str) return *str;
+  }
+
+  return NULL; // unreachable
+}
+
+void ast_free_sexpr(StrExpr* ast) {
+  match (*ast) {
+    of(StringConcat, first, second) {
+      ast_free_sexpr(*first);
+      ast_free_sexpr(*second);
+    }
+    of(String, str) free(*str);
+  }
+}
+
+void print_sexpr(StrExpr* ast, int ind) {
+  match (*ast) {
+    of(StringConcat, first, second) {
+      iprintf(ind, "StringConcat(\n");
+      print_sexpr(*first, ind + 1);
+      print_sexpr(*second, ind + 1);
+      iprintf(ind, ")\n");
+    }
+    of(String, str) iprintf(ind, "String(\"%s\")", *str);
   }
 }
 

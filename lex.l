@@ -13,6 +13,8 @@ we disable this functionality using noyywrap.
 
 %}
 
+%x STRING_STATE
+
 %%
 
 "+" |
@@ -50,4 +52,8 @@ we disable this functionality using noyywrap.
     return NUMBER; 
 }
 
+\"                      { BEGIN(STRING_STATE);                           }
+<STRING_STATE>[^\"\n]*  { yylval.string = strdup(yytext); return STRING; }
+<STRING_STATE>\"        { BEGIN(INITIAL);                                }
+    
 %%

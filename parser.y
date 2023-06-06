@@ -16,16 +16,20 @@ int yylex();
 %}
 
 %union {
+  StrExpr *str_expr;
   ArithExpr *arith_expr;
   BoolExpr *bool_expr;
   Expr *expr;
   Stmt *stmt;
   StatementList *statement_list;
   double number;
+  char* string;
 }
 
 %token <number> NUMBER
+%token <string> STRING
 
+%type <str_expr> sexpr
 %type <arith_expr> aexpr
 %type <bool_expr> bexpr
 %type <expr> expr
@@ -68,7 +72,6 @@ program: stmt-list {
 }
   ;
 
-/* TODO: rename to stmt-list */
 stmt-list: stmt {
     StatementList* ptr = stmt_list_alloc();
     stmt_list_add(ptr, $stmt);
@@ -96,6 +99,7 @@ expr-stmt: expr EOL { $$ = stmt_alloc(ExprStmt($expr)); };
 
 expr: aexpr { $$ = expr_alloc(ArithmeticExpr($1)); }
   | bexpr { $$ = expr_alloc(BooleanExpr($1)); }
+  | sexpr { $$ = expr_alloc(StringExpr($1)); }
   ;
 
 /* Arithmetic expression */
@@ -121,5 +125,10 @@ bexpr:
   | '!' bexpr { $$ = bexpr_alloc(NegatedBoolExpr($2)); }
   | TRUE      { $$ = bexpr_alloc(Boolean(true));       }
   | FALSE     { $$ = bexpr_alloc(Boolean(false));      }
+
+sexpr: STRING { $$ = sexpr_alloc(String($1)); }
+  | sexpr '+' sexpr { $$ = sexpr_alloc(StringConcat($1, $3)); }
+  /* TODO: Add == */
+  ;
 
 %%
