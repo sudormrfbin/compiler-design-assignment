@@ -6,6 +6,8 @@
 #include "datatype99.h"
 #include "parser.tab.h"
 
+extern FILE* yyin;
+
 void ensure_non_null(void *ptr, char *msg) {
   if (!ptr) {
     yyerror(msg);
@@ -172,7 +174,15 @@ void yyerror(const char *s, ...) {
   fprintf(stderr, "\n");
 }
 
-int main() {
-  printf("> ");
+int main(int argc, char **argv) {
+  // If a file is given as command line argument, set input
+  // to file contents.
+  if (argc > 1) {
+    if (!(yyin = fopen(argv[1], "r"))) {
+      perror(argv[1]);
+      return 1;
+    }
+  }
+
   return yyparse();
 }

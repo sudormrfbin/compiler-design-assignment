@@ -59,9 +59,8 @@ program: /* nothing */
   | program stmt {
       eval_stmt($stmt);
       ast_free_stmt($stmt);
-      printf("> ");
   }
-  | program EOL { printf("> "); } /* blank line or comment */
+  | program EOL { } /* blank line or comment */
   ;
 
 stmt: expr-stmt

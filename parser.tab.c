@@ -526,9 +526,9 @@ static const yytype_int8 yytranslate[] =
 /* YYRLINE[YYN] -- Source line where rule number YYN was defined.  */
 static const yytype_int8 yyrline[] =
 {
-       0,    58,    58,    59,    64,    67,    68,    70,    72,    74,
-      75,    79,    80,    81,    82,    83,    84,    85,    90,    91,
-      92,    93,    94,    95,    96,    97,    98,    99,   100
+       0,    58,    58,    59,    63,    66,    67,    69,    71,    73,
+      74,    78,    79,    80,    81,    82,    83,    84,    89,    90,
+      91,    92,    93,    94,    95,    96,    97,    98,    99
 };
 #endif
 
@@ -1337,151 +1337,150 @@ yyreduce:
                  {
       eval_stmt((yyvsp[0].stmt));
       ast_free_stmt((yyvsp[0].stmt));
-      printf("> ");
   }
-#line 1343 "parser.tab.c"
+#line 1342 "parser.tab.c"
     break;
 
   case 4: /* program: program EOL  */
-#line 64 "parser.y"
-                { printf("> "); }
-#line 1349 "parser.tab.c"
+#line 63 "parser.y"
+                { }
+#line 1348 "parser.tab.c"
     break;
 
   case 7: /* display-stmt: DISPLAY expr EOL  */
-#line 70 "parser.y"
+#line 69 "parser.y"
                                {{ (yyval.stmt) = stmt_alloc(DisplayStmt((yyvsp[-1].expr))); }}
-#line 1355 "parser.tab.c"
+#line 1354 "parser.tab.c"
     break;
 
   case 8: /* expr-stmt: expr EOL  */
-#line 72 "parser.y"
+#line 71 "parser.y"
                     {{ (yyval.stmt) = stmt_alloc(ExprStmt((yyvsp[-1].expr))); }}
-#line 1361 "parser.tab.c"
+#line 1360 "parser.tab.c"
     break;
 
   case 9: /* expr: aexpr  */
-#line 74 "parser.y"
+#line 73 "parser.y"
             { (yyval.expr) = expr_alloc(ArithmeticExpr((yyvsp[0].arith_expr))); }
-#line 1367 "parser.tab.c"
+#line 1366 "parser.tab.c"
     break;
 
   case 10: /* expr: bexpr  */
-#line 75 "parser.y"
+#line 74 "parser.y"
           { (yyval.expr) = expr_alloc(BooleanExpr((yyvsp[0].bool_expr))); }
-#line 1373 "parser.tab.c"
+#line 1372 "parser.tab.c"
     break;
 
   case 11: /* aexpr: aexpr '+' aexpr  */
-#line 79 "parser.y"
+#line 78 "parser.y"
                        { (yyval.arith_expr) = aexpr_alloc(BinaryAExpr((yyvsp[-2].arith_expr), BinaryOp_Add, (yyvsp[0].arith_expr))); }
-#line 1379 "parser.tab.c"
+#line 1378 "parser.tab.c"
     break;
 
   case 12: /* aexpr: aexpr '-' aexpr  */
-#line 80 "parser.y"
+#line 79 "parser.y"
                        { (yyval.arith_expr) = aexpr_alloc(BinaryAExpr((yyvsp[-2].arith_expr), BinaryOp_Sub, (yyvsp[0].arith_expr))); }
-#line 1385 "parser.tab.c"
+#line 1384 "parser.tab.c"
     break;
 
   case 13: /* aexpr: aexpr '*' aexpr  */
-#line 81 "parser.y"
+#line 80 "parser.y"
                        { (yyval.arith_expr) = aexpr_alloc(BinaryAExpr((yyvsp[-2].arith_expr), BinaryOp_Mul, (yyvsp[0].arith_expr))); }
-#line 1391 "parser.tab.c"
+#line 1390 "parser.tab.c"
     break;
 
   case 14: /* aexpr: aexpr '/' aexpr  */
-#line 82 "parser.y"
+#line 81 "parser.y"
                        { (yyval.arith_expr) = aexpr_alloc(BinaryAExpr((yyvsp[-2].arith_expr), BinaryOp_Div, (yyvsp[0].arith_expr))); }
-#line 1397 "parser.tab.c"
+#line 1396 "parser.tab.c"
     break;
 
   case 15: /* aexpr: '-' aexpr  */
-#line 83 "parser.y"
+#line 82 "parser.y"
                            { (yyval.arith_expr) = aexpr_alloc(UnaryAExpr(UnaryOp_Minus, (yyvsp[0].arith_expr))); }
-#line 1403 "parser.tab.c"
+#line 1402 "parser.tab.c"
     break;
 
   case 16: /* aexpr: '(' aexpr ')'  */
-#line 84 "parser.y"
+#line 83 "parser.y"
                        { (yyval.arith_expr) = (yyvsp[-1].arith_expr);                       }
-#line 1409 "parser.tab.c"
+#line 1408 "parser.tab.c"
     break;
 
   case 17: /* aexpr: NUMBER  */
-#line 85 "parser.y"
+#line 84 "parser.y"
                        { (yyval.arith_expr) = aexpr_alloc(Number((yyvsp[0].number)));  }
-#line 1415 "parser.tab.c"
+#line 1414 "parser.tab.c"
     break;
 
   case 18: /* bexpr: aexpr EQEQ aexpr  */
-#line 90 "parser.y"
+#line 89 "parser.y"
                      { (yyval.bool_expr) = bexpr_alloc(RelationalArithExpr((yyvsp[-2].arith_expr), RelationalEqual, (yyvsp[0].arith_expr))); }
-#line 1421 "parser.tab.c"
+#line 1420 "parser.tab.c"
     break;
 
   case 19: /* bexpr: aexpr GT aexpr  */
-#line 91 "parser.y"
+#line 90 "parser.y"
                      { (yyval.bool_expr) = bexpr_alloc(RelationalArithExpr((yyvsp[-2].arith_expr), Greater, (yyvsp[0].arith_expr)));         }
-#line 1427 "parser.tab.c"
+#line 1426 "parser.tab.c"
     break;
 
   case 20: /* bexpr: aexpr GTE aexpr  */
-#line 92 "parser.y"
+#line 91 "parser.y"
                      { (yyval.bool_expr) = bexpr_alloc(RelationalArithExpr((yyvsp[-2].arith_expr), GreaterOrEqual, (yyvsp[0].arith_expr)));  }
-#line 1433 "parser.tab.c"
+#line 1432 "parser.tab.c"
     break;
 
   case 21: /* bexpr: aexpr LT aexpr  */
-#line 93 "parser.y"
+#line 92 "parser.y"
                      { (yyval.bool_expr) = bexpr_alloc(RelationalArithExpr((yyvsp[-2].arith_expr), Less, (yyvsp[0].arith_expr)));            }
-#line 1439 "parser.tab.c"
+#line 1438 "parser.tab.c"
     break;
 
   case 22: /* bexpr: aexpr LTE aexpr  */
-#line 94 "parser.y"
+#line 93 "parser.y"
                      { (yyval.bool_expr) = bexpr_alloc(RelationalArithExpr((yyvsp[-2].arith_expr), LessOrEqual, (yyvsp[0].arith_expr)));     }
-#line 1445 "parser.tab.c"
+#line 1444 "parser.tab.c"
     break;
 
   case 23: /* bexpr: bexpr AND bexpr  */
-#line 95 "parser.y"
+#line 94 "parser.y"
                      { (yyval.bool_expr) = bexpr_alloc(LogicalBoolExpr((yyvsp[-2].bool_expr), And, (yyvsp[0].bool_expr)));                 }
-#line 1451 "parser.tab.c"
+#line 1450 "parser.tab.c"
     break;
 
   case 24: /* bexpr: bexpr OR bexpr  */
-#line 96 "parser.y"
+#line 95 "parser.y"
                      { (yyval.bool_expr) = bexpr_alloc(LogicalBoolExpr((yyvsp[-2].bool_expr), Or, (yyvsp[0].bool_expr)));                  }
-#line 1457 "parser.tab.c"
+#line 1456 "parser.tab.c"
     break;
 
   case 25: /* bexpr: bexpr EQEQ bexpr  */
-#line 97 "parser.y"
+#line 96 "parser.y"
                      { (yyval.bool_expr) = bexpr_alloc(LogicalBoolExpr((yyvsp[-2].bool_expr), LogicalEqual, (yyvsp[0].bool_expr)));        }
-#line 1463 "parser.tab.c"
+#line 1462 "parser.tab.c"
     break;
 
   case 26: /* bexpr: '!' bexpr  */
-#line 98 "parser.y"
+#line 97 "parser.y"
               { (yyval.bool_expr) = bexpr_alloc(NegatedBoolExpr((yyvsp[0].bool_expr))); }
-#line 1469 "parser.tab.c"
+#line 1468 "parser.tab.c"
     break;
 
   case 27: /* bexpr: TRUE  */
-#line 99 "parser.y"
+#line 98 "parser.y"
               { (yyval.bool_expr) = bexpr_alloc(Boolean(true));       }
-#line 1475 "parser.tab.c"
+#line 1474 "parser.tab.c"
     break;
 
   case 28: /* bexpr: FALSE  */
-#line 100 "parser.y"
+#line 99 "parser.y"
               { (yyval.bool_expr) = bexpr_alloc(Boolean(false));      }
-#line 1481 "parser.tab.c"
+#line 1480 "parser.tab.c"
     break;
 
 
-#line 1485 "parser.tab.c"
+#line 1484 "parser.tab.c"
 
       default: break;
     }
@@ -1705,5 +1704,5 @@ yyreturnlab:
   return yyresult;
 }
 
-#line 102 "parser.y"
+#line 101 "parser.y"
 
