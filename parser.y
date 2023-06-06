@@ -2,14 +2,14 @@
 %define parse.lac full
 %define parse.error detailed
 
-/* Used to retrieve the AST after calling yyparse() */
-%parse-param { Statements* parse_result }
-
 %{
 
 #include <stdio.h>
 #include "ast.h"
 #include "datatype99.h"
+
+/* Global variable for storing the resulting AST after parsing a file */
+Statements* parse_result = NULL;
 
 int yylex();
 
@@ -69,14 +69,16 @@ program: statements {
   ;
 
 /* TODO: rename to stmt-list */
-statements: { $$ = NULL; } /* epsilon */
+statements: stmt {
+    Statements* ptr = statements_alloc();
+    statements_add_stmt(ptr, $stmt);
+    $$ = ptr;
+  }
   | statements stmt {
-      statements_add_stmt($1, $2);
-      $$ = $1;
+    statements_add_stmt($1, $2);
+    $$ = $1;
   }
   ;
-  // | statements EOL /* blank line or comment */
-
 
 stmt: expr-stmt
   | display-stmt

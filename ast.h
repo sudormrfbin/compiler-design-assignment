@@ -4,7 +4,7 @@
 typedef struct Statements Statements;
 
 extern int yylineno;
-extern void yyerror(Statements*, const char *, ...);
+extern void yyerror(const char *, ...);
 
 typedef enum {
   BinaryOp_Add,
@@ -68,7 +68,7 @@ struct Statements {
   Statements* prev;
 };
 
-Statements* statemets_alloc();
+Statements* statements_alloc();
 void statements_add_stmt(Statements* start, Stmt* stmt);
 void eval_statements(Statements* stmts);
 void statements_free(Statements* stmts);

@@ -99,7 +99,7 @@ typedef union YYSTYPE YYSTYPE;
 extern YYSTYPE yylval;
 
 
-int yyparse (Statements* parse_result);
+int yyparse (void);
 
 
 #endif /* !YY_YY_PARSER_TAB_H_INCLUDED  */

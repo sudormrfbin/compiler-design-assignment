@@ -7,6 +7,7 @@
 #include "parser.tab.h"
 
 extern FILE* yyin;
+extern Statements* parse_result;
 
 void ensure_non_null(void *ptr, char *msg) {
   if (!ptr) {
@@ -371,7 +372,7 @@ void print_statements(Statements* start, int ind) {
 
 /* ------------------------------------------------------------------- */
 
-void yyerror(Statements* parse_result, const char *s, ...) {
+void yyerror(const char *s, ...) {
   va_list ap;
   va_start(ap, s);
 
@@ -390,10 +391,10 @@ int main(int argc, char **argv) {
     }
   }
 
-  Statements* parse_result = NULL;
-  yyparse(parse_result);
-  print_statements(parse_result, 0);
+  yyparse();
+  // print_statements(parse_result, 0);
   eval_statements(parse_result);
+  statements_free(parse_result);
 
   return 0;
 }
