@@ -13,26 +13,17 @@ void ensure_non_null(void *ptr, char *msg) {
   }
 }
 
-ArithExpr* aexpr_alloc(ArithExpr ast) {
-  ArithExpr *alloc = malloc(sizeof(ast));
-  ensure_non_null(alloc, "out of space");
-  memcpy(alloc, &ast, sizeof(ast));
-  return alloc;
-}
+#define ALLOC_NODE(type, node) \
+    type* node##_alloc(type ast) { \
+        type* alloc = malloc(sizeof(ast)); \
+        ensure_non_null(alloc, "out of space"); \
+        memcpy(alloc, &ast, sizeof(ast)); \
+        return alloc; \
+    }
 
-BoolExpr* bexpr_alloc(BoolExpr ast) {
-  BoolExpr *alloc = malloc(sizeof(ast));
-  ensure_non_null(alloc, "out of space");
-  memcpy(alloc, &ast, sizeof(ast));
-  return alloc;
-}
-
-Expr* expr_alloc(Expr ast) {
-  Expr *alloc = malloc(sizeof(ast));
-  ensure_non_null(alloc, "out of space");
-  memcpy(alloc, &ast, sizeof(ast));
-  return alloc;
-}
+ALLOC_NODE(ArithExpr, aexpr)
+ALLOC_NODE(BoolExpr, bexpr)
+ALLOC_NODE(Expr, expr)
 
 /* ------------------- Tree Walking Evaluation ---------------------- */
 
