@@ -75,7 +75,7 @@
 #include "datatype99.h"
 
 /* Global variable for storing the resulting AST after parsing a file */
-Statements* parse_result = NULL;
+StatementList* parse_result = NULL;
 
 int yylex();
 
@@ -136,7 +136,7 @@ enum yysymbol_kind_t
   YYSYMBOL_25_ = 25,                       /* ')'  */
   YYSYMBOL_YYACCEPT = 26,                  /* $accept  */
   YYSYMBOL_program = 27,                   /* program  */
-  YYSYMBOL_statements = 28,                /* statements  */
+  YYSYMBOL_28_stmt_list = 28,              /* stmt-list  */
   YYSYMBOL_stmt = 29,                      /* stmt  */
   YYSYMBOL_30_if_stmt = 30,                /* if-stmt  */
   YYSYMBOL_31_display_stmt = 31,           /* display-stmt  */
@@ -531,7 +531,7 @@ yysymbol_name (yysymbol_kind_t yysymbol)
   "end of file", "error", "invalid token", "NUMBER", "EOL", "GT", "GTE",
   "LT", "LTE", "AND", "OR", "EQEQ", "TRUE", "FALSE", "DISPLAY", "IF",
   "THEN", "ENDIF", "'!'", "'-'", "'+'", "'*'", "'/'", "UMINUS", "'('",
-  "')'", "$accept", "program", "statements", "stmt", "if-stmt",
+  "')'", "$accept", "program", "stmt-list", "stmt", "if-stmt",
   "display-stmt", "expr-stmt", "expr", "aexpr", "bexpr", YY_NULLPTR
   };
   return yy_sname[yysymbol];
@@ -1585,37 +1585,37 @@ yyreduce:
     int yychar_backup = yychar;
     switch (yyn)
       {
-  case 2: /* program: statements  */
+  case 2: /* program: stmt-list  */
 #line 66 "parser.y"
-                    {
-  parse_result = (yyvsp[0].statements);
+                   {
+  parse_result = (yyvsp[0].statement_list);
 }
 #line 1594 "parser.tab.c"
     break;
 
-  case 3: /* statements: stmt  */
+  case 3: /* stmt-list: stmt  */
 #line 72 "parser.y"
-                 {
-    Statements* ptr = statements_alloc();
-    statements_add_stmt(ptr, (yyvsp[0].stmt));
-    (yyval.statements) = ptr;
+                {
+    StatementList* ptr = stmt_list_alloc();
+    stmt_list_add(ptr, (yyvsp[0].stmt));
+    (yyval.statement_list) = ptr;
   }
 #line 1604 "parser.tab.c"
     break;
 
-  case 4: /* statements: statements stmt  */
+  case 4: /* stmt-list: stmt-list stmt  */
 #line 77 "parser.y"
-                    {
-    statements_add_stmt((yyvsp[-1].statements), (yyvsp[0].stmt));
-    (yyval.statements) = (yyvsp[-1].statements);
+                   {
+    stmt_list_add((yyvsp[-1].statement_list), (yyvsp[0].stmt));
+    (yyval.statement_list) = (yyvsp[-1].statement_list);
   }
 #line 1613 "parser.tab.c"
     break;
 
-  case 8: /* if-stmt: IF bexpr THEN EOL statements ENDIF EOL  */
+  case 8: /* if-stmt: IF bexpr THEN EOL stmt-list ENDIF EOL  */
 #line 88 "parser.y"
-                                                {
-    (yyval.stmt) = stmt_alloc(IfStmt((yyvsp[-5].bool_expr), (yyvsp[-2].statements)));
+                                               {
+    (yyval.stmt) = stmt_alloc(IfStmt((yyvsp[-5].bool_expr), (yyvsp[-2].statement_list)));
   }
 #line 1621 "parser.tab.c"
     break;

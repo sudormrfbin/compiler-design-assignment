@@ -7,7 +7,7 @@
 #include "parser.tab.h"
 
 extern FILE* yyin;
-extern Statements* parse_result;
+extern StatementList* parse_result;
 
 void ensure_non_null(void *ptr, char *msg) {
   if (!ptr) {
@@ -30,8 +30,8 @@ ALLOC_NODE(Expr, expr)
 ALLOC_NODE(Stmt, stmt)
 ALLOC_NODE(Ast, ast)
 
-Statements* statements_alloc() {
-  Statements* alloc = malloc(sizeof(Statements));
+StatementList* stmt_list_alloc() {
+  StatementList* alloc = malloc(sizeof(StatementList));
   ensure_non_null(alloc, "out of space");
   alloc->next = NULL;
   alloc->prev = NULL;
@@ -40,16 +40,16 @@ Statements* statements_alloc() {
   return alloc;
 }
 
-void statements_add_stmt(Statements* start, Stmt* stmt) {
+void stmt_list_add(StatementList* start, Stmt* stmt) {
   if (!start) {
-    start = statements_alloc();
+    start = stmt_list_alloc();
     start->value = stmt;
     return;
   } else {
-    Statements* end = start;
+    StatementList* end = start;
     while (end->next) end = end->next;
 
-    Statements* new = statements_alloc();
+    StatementList* new = stmt_list_alloc();
     new->value = stmt;
     new->prev = end;
     end->next = new;
@@ -57,16 +57,16 @@ void statements_add_stmt(Statements* start, Stmt* stmt) {
   }
 }
 
-void eval_statements(Statements* start) {
-  Statements* curr = start;
+void eval_stmt_list(StatementList* start) {
+  StatementList* curr = start;
   while (curr) {
     eval_stmt(curr->value);
     curr = curr->next;
   }
 }
 
-void statements_free(Statements* start) {
-  Statements* curr = start;
+void stmt_list_free(StatementList* start) {
+  StatementList* curr = start;
   while (curr) {
     ast_free_stmt(curr->value);
     curr = curr->next;
@@ -144,7 +144,7 @@ void eval_stmt(Stmt* stmt) {
     of(ExprStmt, expr) eval_expr(*expr); 
     of(IfStmt, condition, true_stmts) {
       if (eval_bexpr(*condition)) {
-        eval_statements(*true_stmts);
+        eval_stmt_list(*true_stmts);
       }
     }
   }
@@ -205,7 +205,7 @@ void ast_free_stmt(Stmt* ast) {
     of(ExprStmt, expr) ast_free_expr(*expr);
     of(IfStmt, condition, true_stmts) {
       ast_free_bexpr(*condition);
-      statements_free(*true_stmts);
+      stmt_list_free(*true_stmts);
     }
   }
 }
@@ -351,7 +351,7 @@ void print_stmt(Stmt *ast, int ind) {
       iprintf(ind + 1, ")\n");
 
       iprintf(ind + 1, "TrueStatements(\n");
-      print_statements(*true_stmts, ind + 2);
+      print_stmt_list(*true_stmts, ind + 2);
       iprintf(ind + 1, ")\n");
 
       iprintf(ind, ")\n");
@@ -359,8 +359,8 @@ void print_stmt(Stmt *ast, int ind) {
   }
 }
 
-void print_statements(Statements* start, int ind) {
-  Statements* curr = start;
+void print_stmt_list(StatementList* start, int ind) {
+  StatementList* curr = start;
   while (curr) {
     iprintf(ind, "Statement(\n");
     print_stmt(curr->value, ind + 1);
@@ -393,8 +393,8 @@ int main(int argc, char **argv) {
 
   yyparse();
   // print_statements(parse_result, 0);
-  eval_statements(parse_result);
-  statements_free(parse_result);
+  eval_stmt_list(parse_result);
+  stmt_list_free(parse_result);
 
   return 0;
 }

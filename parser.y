@@ -9,7 +9,7 @@
 #include "datatype99.h"
 
 /* Global variable for storing the resulting AST after parsing a file */
-Statements* parse_result = NULL;
+StatementList* parse_result = NULL;
 
 int yylex();
 
@@ -20,7 +20,7 @@ int yylex();
   BoolExpr *bool_expr;
   Expr *expr;
   Stmt *stmt;
-  Statements *statements;
+  StatementList *statement_list;
   double number;
 }
 
@@ -30,7 +30,7 @@ int yylex();
 %type <bool_expr> bexpr
 %type <expr> expr
 %type <stmt> stmt display-stmt expr-stmt if-stmt
-%type <statements> statements
+%type <statement_list> stmt-list
 
 %token EOL
 %token GT
@@ -63,19 +63,19 @@ int yylex();
 
 /* TODO: Try adding eol: EOL | eol EOL; to compress multiple newlines into one token */
 
-program: statements {
-  parse_result = $statements;
+program: stmt-list {
+  parse_result = $1;
 }
   ;
 
 /* TODO: rename to stmt-list */
-statements: stmt {
-    Statements* ptr = statements_alloc();
-    statements_add_stmt(ptr, $stmt);
+stmt-list: stmt {
+    StatementList* ptr = stmt_list_alloc();
+    stmt_list_add(ptr, $stmt);
     $$ = ptr;
   }
-  | statements stmt {
-    statements_add_stmt($1, $2);
+  | stmt-list stmt {
+    stmt_list_add($1, $2);
     $$ = $1;
   }
   ;
@@ -85,8 +85,8 @@ stmt: expr-stmt
   | if-stmt
   ;
 
-if-stmt: IF bexpr THEN EOL statements ENDIF EOL {
-    $$ = stmt_alloc(IfStmt($bexpr, $statements));
+if-stmt: IF bexpr THEN EOL stmt-list ENDIF EOL {
+    $$ = stmt_alloc(IfStmt($bexpr, $[stmt-list]));
   }
   ;
 

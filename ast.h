@@ -1,7 +1,7 @@
 #include "datatype99.h"
 #include <stdbool.h>
 
-typedef struct Statements Statements;
+typedef struct StatementList StatementList;
 
 extern int yylineno;
 extern void yyerror(const char *, ...);
@@ -53,7 +53,7 @@ datatype(
 );
 
 typedef BoolExpr Condition;
-typedef Statements TrueStatements;
+typedef StatementList TrueStatements;
 
 datatype(
   Stmt,
@@ -62,17 +62,17 @@ datatype(
   (IfStmt, Condition*, TrueStatements*)
 );
 
-struct Statements {
+struct StatementList {
   Stmt* value;
-  Statements* next;
-  Statements* prev;
+  StatementList* next;
+  StatementList* prev;
 };
 
-Statements* statements_alloc();
-void statements_add_stmt(Statements* start, Stmt* stmt);
-void eval_statements(Statements* stmts);
-void statements_free(Statements* stmts);
-void print_statements(Statements* ast, int indent);
+StatementList* stmt_list_alloc();
+void stmt_list_add(StatementList* start, Stmt* stmt);
+void eval_stmt_list(StatementList* stmts);
+void stmt_list_free(StatementList* stmts);
+void print_stmt_list(StatementList* ast, int indent);
 
 datatype(
   Ast,

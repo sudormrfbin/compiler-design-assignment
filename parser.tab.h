@@ -84,7 +84,7 @@ union YYSTYPE
   BoolExpr *bool_expr;
   Expr *expr;
   Stmt *stmt;
-  Statements *statements;
+  StatementList *statement_list;
   double number;
 
 #line 91 "parser.tab.h"
