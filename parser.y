@@ -1,15 +1,15 @@
 /* Enable detailed error reporting */
-/* %define parse.lac full */
+%define parse.lac full
 %define parse.error detailed
 
+/* Used to retrieve the AST after calling yyparse() */
+%parse-param { Statements* parse_result }
+
 %{
+
 #include <stdio.h>
 #include "ast.h"
 #include "datatype99.h"
-
-// int yyerror(const char *s) {
-//   fprintf(stderr, "error: %s\n", s);
-// }
 
 int yylex();
 
@@ -20,6 +20,7 @@ int yylex();
   BoolExpr *bool_expr;
   Expr *expr;
   Stmt *stmt;
+  Statements *statements;
   double number;
 }
 
@@ -28,7 +29,8 @@ int yylex();
 %type <arith_expr> aexpr
 %type <bool_expr> bexpr
 %type <expr> expr
-%type <stmt> stmt display-stmt expr-stmt
+%type <stmt> stmt display-stmt expr-stmt if-stmt
+%type <statements> statements
 
 %token EOL
 %token GT
@@ -44,6 +46,10 @@ int yylex();
 
 %token DISPLAY
 
+%token IF
+%token THEN
+%token ENDIF
+
 /* Explicitly declare precedence instead of implicitly doing it
    through the grammar.
 */
@@ -55,20 +61,36 @@ int yylex();
 
 %%
 
-program: /* nothing */
-  | program stmt {
-      eval_stmt($stmt);
-      ast_free_stmt($stmt);
-  }
-  | program EOL { } /* blank line or comment */
+/* TODO: Try adding eol: EOL | eol EOL; to compress multiple newlines into one token */
+
+program: statements {
+  parse_result = $statements;
+}
   ;
 
+/* TODO: rename to stmt-list */
+statements: { $$ = NULL; } /* epsilon */
+  | statements stmt {
+      statements_add_stmt($1, $2);
+      $$ = $1;
+  }
+  ;
+  // | statements EOL /* blank line or comment */
+
+
 stmt: expr-stmt
-  | display-stmt;
+  | display-stmt
+  | if-stmt
+  ;
 
-display-stmt: DISPLAY expr EOL {{ $$ = stmt_alloc(DisplayStmt($expr)); }};
+if-stmt: IF bexpr THEN EOL statements ENDIF EOL {
+    $$ = stmt_alloc(IfStmt($bexpr, $statements));
+  }
+  ;
 
-expr-stmt: expr EOL {{ $$ = stmt_alloc(ExprStmt($expr)); }};
+display-stmt: DISPLAY expr EOL { $$ = stmt_alloc(DisplayStmt($expr)); };
+
+expr-stmt: expr EOL { $$ = stmt_alloc(ExprStmt($expr)); };
 
 expr: aexpr { $$ = expr_alloc(ArithmeticExpr($1)); }
   | bexpr { $$ = expr_alloc(BooleanExpr($1)); }

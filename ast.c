@@ -10,7 +10,7 @@ extern FILE* yyin;
 
 void ensure_non_null(void *ptr, char *msg) {
   if (!ptr) {
-    yyerror(msg);
+    yyerror(NULL, msg);
     exit(1);
   }
 }
@@ -28,6 +28,49 @@ ALLOC_NODE(BoolExpr, bexpr)
 ALLOC_NODE(Expr, expr)
 ALLOC_NODE(Stmt, stmt)
 ALLOC_NODE(Ast, ast)
+
+Statements* statements_alloc() {
+  Statements* alloc = malloc(sizeof(Statements));
+  ensure_non_null(alloc, "out of space");
+  alloc->next = NULL;
+  alloc->prev = NULL;
+  alloc->value = NULL;
+
+  return alloc;
+}
+
+void statements_add_stmt(Statements* start, Stmt* stmt) {
+  if (!start) {
+    start = statements_alloc();
+    start->value = stmt;
+    return;
+  } else {
+    Statements* end = start;
+    while (end->next) end = end->next;
+
+    Statements* new = statements_alloc();
+    new->value = stmt;
+    new->prev = end;
+    end->next = new;
+    return;
+  }
+}
+
+void eval_statements(Statements* start) {
+  Statements* curr = start;
+  while (curr) {
+    eval_stmt(curr->value);
+    curr = curr->next;
+  }
+}
+
+void statements_free(Statements* start) {
+  Statements* curr = start;
+  while (curr) {
+    ast_free_stmt(curr->value);
+    curr = curr->next;
+  }
+}
 
 /* ------------------- Tree Walking Evaluation ---------------------- */
 
@@ -98,6 +141,11 @@ void eval_stmt(Stmt* stmt) {
       }
     }
     of(ExprStmt, expr) eval_expr(*expr); 
+    of(IfStmt, condition, true_stmts) {
+      if (eval_bexpr(*condition)) {
+        eval_statements(*true_stmts);
+      }
+    }
   }
 }
 
@@ -154,6 +202,10 @@ void ast_free_stmt(Stmt* ast) {
   match (*ast) {
     of(DisplayStmt, expr) ast_free_expr(*expr);
     of(ExprStmt, expr) ast_free_expr(*expr);
+    of(IfStmt, condition, true_stmts) {
+      ast_free_bexpr(*condition);
+      statements_free(*true_stmts);
+    }
   }
 }
 
@@ -165,7 +217,7 @@ void ast_free(Ast* ast) {
 
 /* ------------------------------------------------------------------- */
 
-void yyerror(const char *s, ...) {
+void yyerror(Statements* parse_result, const char *s, ...) {
   va_list ap;
   va_start(ap, s);
 
@@ -184,5 +236,9 @@ int main(int argc, char **argv) {
     }
   }
 
-  return yyparse();
+  Statements* parse_result = NULL;
+  yyparse(parse_result);
+  eval_statements(parse_result);
+
+  return 0;
 }

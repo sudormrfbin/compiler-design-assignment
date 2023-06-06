@@ -1,8 +1,10 @@
 #include "datatype99.h"
 #include <stdbool.h>
 
+typedef struct Statements Statements;
+
 extern int yylineno;
-void yyerror(const char *, ...);
+extern void yyerror(Statements*, const char *, ...);
 
 typedef enum {
   BinaryOp_Add,
@@ -50,11 +52,26 @@ datatype(
   (ArithmeticExpr, ArithExpr *)
 );
 
+typedef BoolExpr Condition;
+typedef Statements TrueStatements;
+
 datatype(
   Stmt,
   (DisplayStmt, Expr*),
-  (ExprStmt, Expr*)
+  (ExprStmt, Expr*),
+  (IfStmt, Condition*, TrueStatements*)
 );
+
+struct Statements {
+  Stmt* value;
+  Statements* next;
+  Statements* prev;
+};
+
+Statements* statemets_alloc();
+void statements_add_stmt(Statements* start, Stmt* stmt);
+void eval_statements(Statements* stmts);
+void statements_free(Statements* stmts);
 
 datatype(
   Ast,

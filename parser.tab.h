@@ -66,7 +66,10 @@ extern int yydebug;
     TRUE = 267,                    /* TRUE  */
     FALSE = 268,                   /* FALSE  */
     DISPLAY = 269,                 /* DISPLAY  */
-    UMINUS = 270                   /* UMINUS  */
+    IF = 270,                      /* IF  */
+    THEN = 271,                    /* THEN  */
+    ENDIF = 272,                   /* ENDIF  */
+    UMINUS = 273                   /* UMINUS  */
   };
   typedef enum yytokentype yytoken_kind_t;
 #endif
@@ -81,9 +84,10 @@ union YYSTYPE
   BoolExpr *bool_expr;
   Expr *expr;
   Stmt *stmt;
+  Statements *statements;
   double number;
 
-#line 87 "parser.tab.h"
+#line 91 "parser.tab.h"
 
 };
 typedef union YYSTYPE YYSTYPE;
@@ -95,7 +99,7 @@ typedef union YYSTYPE YYSTYPE;
 extern YYSTYPE yylval;
 
 
-int yyparse (void);
+int yyparse (Statements* parse_result);
 
 
 #endif /* !YY_YY_PARSER_TAB_H_INCLUDED  */

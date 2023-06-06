@@ -36,7 +36,11 @@ we disable this functionality using noyywrap.
 
 "display" { return DISPLAY; }
 
-\n      { return EOL; }
+"if"    { return IF;    }
+"then"  { return THEN;  }
+"endif" { return ENDIF; }
+
+\n+      { return EOL; } /* compressing multiple newlines makes it easier to write grammar rules */
 
 [ \t]   { } /* ignore whitespace */
 "//".+  { } /* ignore comments   */
@@ -44,8 +48,6 @@ we disable this functionality using noyywrap.
 [0-9]+("."[0-9]+)?  {
     yylval.number = atof(yytext);
     return NUMBER; 
-  }
-
-.       { printf("Mystery character %c\n", *yytext); }
+}
 
 %%
