@@ -131,7 +131,7 @@ enum yysymbol_kind_t
   YYSYMBOL_20_ = 20,                       /* '('  */
   YYSYMBOL_21_ = 21,                       /* ')'  */
   YYSYMBOL_YYACCEPT = 22,                  /* $accept  */
-  YYSYMBOL_calclist = 23,                  /* calclist  */
+  YYSYMBOL_program = 23,                   /* program  */
   YYSYMBOL_expr = 24,                      /* expr  */
   YYSYMBOL_aexpr = 25,                     /* aexpr  */
   YYSYMBOL_bexpr = 26                      /* bexpr  */
@@ -542,7 +542,7 @@ yysymbol_name (yysymbol_kind_t yysymbol)
   {
   "end of file", "error", "invalid token", "EOL", "GT", "GTE", "LT",
   "LTE", "AND", "OR", "EQEQ", "TRUE", "FALSE", "NUMBER", "'!'", "'-'",
-  "'+'", "'*'", "'/'", "UMINUS", "'('", "')'", "$accept", "calclist",
+  "'+'", "'*'", "'/'", "UMINUS", "'('", "')'", "$accept", "program",
   "expr", "aexpr", "bexpr", YY_NULLPTR
   };
   return yy_sname[yysymbol];
@@ -1327,9 +1327,9 @@ yyreduce:
   YY_REDUCE_PRINT (yyn);
   switch (yyn)
     {
-  case 3: /* calclist: calclist expr EOL  */
+  case 3: /* program: program expr EOL  */
 #line 55 "parser.y"
-                      {
+                     {
       ExprResult result = eval((yyvsp[-1].expr));
       match(result) {
         of(BooleanResult, boolean) printf("= %s\n", *boolean ? "true" : "false");
@@ -1342,9 +1342,9 @@ yyreduce:
 #line 1343 "parser.tab.c"
     break;
 
-  case 4: /* calclist: calclist EOL  */
+  case 4: /* program: program EOL  */
 #line 65 "parser.y"
-                 { printf("> "); }
+                { printf("> "); }
 #line 1349 "parser.tab.c"
     break;
 

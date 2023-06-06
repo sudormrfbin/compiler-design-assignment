@@ -51,8 +51,8 @@ int yylex();
 
 %%
 
-calclist: /* nothing */
-  | calclist expr EOL {
+program: /* nothing */
+  | program expr EOL {
       ExprResult result = eval($expr);
       match(result) {
         of(BooleanResult, boolean) printf("= %s\n", *boolean ? "true" : "false");
@@ -62,7 +62,7 @@ calclist: /* nothing */
       ast_free_expr($expr);
       printf("> ");
   }
-  | calclist EOL { printf("> "); } /* blank line or comment */
+  | program EOL { printf("> "); } /* blank line or comment */
   ;
 
 expr: aexpr { $$ = expr_alloc(ArithmeticExpr($1)); }
