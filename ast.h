@@ -72,6 +72,7 @@ Statements* statemets_alloc();
 void statements_add_stmt(Statements* start, Stmt* stmt);
 void eval_statements(Statements* stmts);
 void statements_free(Statements* stmts);
+void print_statements(Statements* ast, int indent);
 
 datatype(
   Ast,
@@ -88,22 +89,27 @@ datatype(
 ArithExpr* aexpr_alloc(ArithExpr ast);
 double eval_aexpr(ArithExpr* ast);
 void ast_free_aexpr(ArithExpr* ast);
+void print_aexpr(ArithExpr* ast, int indent);
 
 BoolExpr* bexpr_alloc(BoolExpr ast);
 bool eval_bexpr(BoolExpr* ast);
 void ast_free_bexpr(BoolExpr* ast);
+void print_bexpr(BoolExpr* ast, int indent);
 
 Expr* expr_alloc(Expr ast);
 ExprResult eval_expr(Expr *);
 void ast_free_expr(Expr* ast);
+void print_expr(Expr* ast, int indent);
 
 Stmt* stmt_alloc(Stmt ast);
 void eval_stmt(Stmt* ast);
 void ast_free_stmt(Stmt* ast);
+void print_stmt(Stmt* ast, int indent);
 
 Ast* ast_alloc(Ast ast);
 void eval(Ast* ast);
 void ast_free(Ast* ast);
+void print_ast(Ast* ast, int indent);
 
 
 

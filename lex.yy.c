@@ -887,7 +887,7 @@ case 21:
 /* rule 21 can match eol */
 YY_RULE_SETUP
 #line 43 "lex.l"
-{ return EOL; }
+{ return EOL; } /* compressing multiple newlines makes it easier to write grammar rules */
 	YY_BREAK
 case 22:
 YY_RULE_SETUP

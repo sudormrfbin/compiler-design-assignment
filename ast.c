@@ -215,6 +215,160 @@ void ast_free(Ast* ast) {
   }
 }
 
+/* --------------------------- AST Printing -------------------------- */
+
+// Prints 2 * level number of spaces
+void print_indent(int level) {
+  for (int i=1; i<=level; i++) printf("  "); 
+}
+
+void iprintf(int indent, const char *s, ...) {
+  va_list ap;
+  va_start(ap, s);
+
+  print_indent(indent);
+  vprintf(s, ap);
+}
+
+void print_aexpr(ArithExpr* ast, int ind) {
+  match(*ast) {
+    of(BinaryAExpr, left, op, right) {
+      iprintf(ind, "BinaryExpression(\n");
+      ind++;
+      print_aexpr(*left, ind);
+
+      iprintf(ind, "Op(");
+      switch (*op) {
+        case BinaryOp_Add: printf("+"); break;
+        case BinaryOp_Sub: printf("-"); break;
+        case BinaryOp_Mul: printf("*"); break;
+        case BinaryOp_Div: printf("/"); break;
+      }
+      printf(")\n");
+
+      print_aexpr(*right, ind);
+      ind--;
+      iprintf(ind, ")\n");
+    }
+    of(UnaryAExpr, op, right) {
+      iprintf(ind, "UnaryExpression(\n");
+      ind++;
+
+      iprintf(ind, "Op(");
+      switch (*op) {
+        case UnaryOp_Minus: printf("-"); break;
+      }
+      printf(")\n");
+
+      print_aexpr(*right, ind);
+      ind--;
+      iprintf(ind, ")\n");
+    }
+    of(Number, num) iprintf(ind, "Number(%g)\n", *num); 
+  }
+
+  ind--;
+}
+
+void print_bexpr(BoolExpr* ast, int ind) {
+  match (*ast) {
+    of(RelationalArithExpr, left, relop, right) {
+      iprintf(ind, "RelationalExpression(\n");
+      ind++;
+      print_aexpr(*left, ind);
+
+      iprintf(ind, "Op(");
+      switch (*relop) {
+        case RelationalEqual: printf("=="); break;
+        case Greater:         printf(">"); break;
+        case GreaterOrEqual:  printf(">="); break;
+        case Less:            printf("<"); break;
+        case LessOrEqual:     printf("<="); break;
+      }
+      printf(")\n");
+      print_aexpr(*right, ind);
+      ind--;
+    }
+    of(LogicalBoolExpr, left, logicalop, right) {
+      iprintf(ind, "LogicalExpression(\n");
+      ind++;
+      print_bexpr(*left, ind);
+
+      iprintf(ind, "Op(");
+      switch (*logicalop) {
+        case And: printf("&&"); break;
+        case Or: printf("||"); break;
+        case LogicalEqual: printf("=="); break;
+      }
+      printf(")\n");
+
+      print_bexpr(*right, ind);
+      ind--;
+    }
+    of(NegatedBoolExpr, bexpr) {
+      iprintf(ind, "Op(!)\n");
+      print_bexpr(*bexpr, ind);
+    }
+    of(Boolean, boolean) {
+      iprintf(ind, "Boolean(%s)\n", *boolean ? "true" : "false");
+    };
+  }
+}
+
+void print_expr(Expr* ast, int ind) {
+  match (*ast) {
+    of(BooleanExpr, bexpr) {
+      iprintf(ind, "BooleanExpression(\n");
+      print_bexpr(*bexpr, ind + 1);
+      iprintf(ind, ")\n");
+    }
+    of(ArithmeticExpr, aexpr) {
+      iprintf(ind, "ArithmeticExpression(\n");
+      print_aexpr(*aexpr, ind + 1);
+      iprintf(ind, ")\n");
+    }
+  }
+}
+
+void print_stmt(Stmt *ast, int ind) {
+  match (*ast) {
+    of(DisplayStmt, expr) {
+      iprintf(ind, "DisplayStatement(\n");
+      print_expr(*expr, ind + 1);
+      iprintf(ind, ")\n");
+    }
+    of(ExprStmt, expr) {
+      iprintf(ind, "ExpressionStatement(\n");
+      print_expr(*expr, ind + 1);
+      iprintf(ind, ")\n");
+    }; 
+    of(IfStmt, condition, true_stmts) {
+      iprintf(ind, "IfStatement(\n");
+
+      iprintf(ind + 1, "Condition(\n");
+      print_bexpr(*condition, ind + 2);
+      iprintf(ind + 1, ")\n");
+
+      iprintf(ind + 1, "TrueStatements(\n");
+      print_statements(*true_stmts, ind + 2);
+      iprintf(ind + 1, ")\n");
+
+      iprintf(ind, ")\n");
+    }
+  }
+}
+
+void print_statements(Statements* start, int ind) {
+  Statements* curr = start;
+  while (curr) {
+    iprintf(ind, "Statement(\n");
+    print_stmt(curr->value, ind + 1);
+    iprintf(ind, ")\n");
+
+    curr = curr->next;
+  }
+}
+
 /* ------------------------------------------------------------------- */
 
 void yyerror(Statements* parse_result, const char *s, ...) {
@@ -238,6 +392,7 @@ int main(int argc, char **argv) {
 
   Statements* parse_result = NULL;
   yyparse(parse_result);
+  print_statements(parse_result, 0);
   eval_statements(parse_result);
 
   return 0;
