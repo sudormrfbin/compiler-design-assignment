@@ -51,8 +51,14 @@ datatype(
 );
 
 datatype(
+  Stmt,
+  (DisplayStmt, Expr*),
+  (ExprStmt, Expr*)
+);
+
+datatype(
   Ast,
-  (Expression, Expr *)
+  (Statement, Stmt *)
 );
 
 datatype(
@@ -61,15 +67,28 @@ datatype(
   (NumberResult, double)
 );
 
+// TODO: Rename to alloc_* and free_*
 ArithExpr* aexpr_alloc(ArithExpr ast);
-BoolExpr* bexpr_alloc(BoolExpr ast);
-Expr* expr_alloc(Expr ast);
-
 double eval_aexpr(ArithExpr* ast);
-bool eval_bexpr(BoolExpr* ast);
-ExprResult eval(Expr *);
-
 void ast_free_aexpr(ArithExpr* ast);
+
+BoolExpr* bexpr_alloc(BoolExpr ast);
+bool eval_bexpr(BoolExpr* ast);
 void ast_free_bexpr(BoolExpr* ast);
+
+Expr* expr_alloc(Expr ast);
+ExprResult eval_expr(Expr *);
 void ast_free_expr(Expr* ast);
+
+Stmt* stmt_alloc(Stmt ast);
+void eval_stmt(Stmt* ast);
+void ast_free_stmt(Stmt* ast);
+
+Ast* ast_alloc(Ast ast);
+void eval(Ast* ast);
 void ast_free(Ast* ast);
+
+
+
+
+

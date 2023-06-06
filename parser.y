@@ -19,8 +19,16 @@ int yylex();
   ArithExpr *arith_expr;
   BoolExpr *bool_expr;
   Expr *expr;
+  Stmt *stmt;
   double number;
 }
+
+%token <number> NUMBER
+
+%type <arith_expr> aexpr
+%type <bool_expr> bexpr
+%type <expr> expr
+%type <stmt> stmt display-stmt expr-stmt
 
 %token EOL
 %token GT
@@ -34,11 +42,7 @@ int yylex();
 %token TRUE
 %token FALSE
 
-%token <number> NUMBER
-
-%type <arith_expr> aexpr
-%type <bool_expr> bexpr
-%type <expr> expr
+%token DISPLAY
 
 /* Explicitly declare precedence instead of implicitly doing it
    through the grammar.
@@ -52,18 +56,20 @@ int yylex();
 %%
 
 program: /* nothing */
-  | program expr EOL {
-      ExprResult result = eval($expr);
-      match(result) {
-        of(BooleanResult, boolean) printf("= %s\n", *boolean ? "true" : "false");
-        of(NumberResult, number) printf("= %4.4g\n", *number);
-      }
-       
-      ast_free_expr($expr);
+  | program stmt {
+      eval_stmt($stmt);
+      ast_free_stmt($stmt);
       printf("> ");
   }
   | program EOL { printf("> "); } /* blank line or comment */
   ;
+
+stmt: expr-stmt
+  | display-stmt;
+
+display-stmt: DISPLAY expr EOL {{ $$ = stmt_alloc(DisplayStmt($expr)); }};
+
+expr-stmt: expr EOL {{ $$ = stmt_alloc(ExprStmt($expr)); }};
 
 expr: aexpr { $$ = expr_alloc(ArithmeticExpr($1)); }
   | bexpr { $$ = expr_alloc(BooleanExpr($1)); }

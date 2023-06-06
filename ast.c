@@ -24,8 +24,12 @@ void ensure_non_null(void *ptr, char *msg) {
 ALLOC_NODE(ArithExpr, aexpr)
 ALLOC_NODE(BoolExpr, bexpr)
 ALLOC_NODE(Expr, expr)
+ALLOC_NODE(Stmt, stmt)
+ALLOC_NODE(Ast, ast)
 
 /* ------------------- Tree Walking Evaluation ---------------------- */
+
+// TODO: exit with error if reaching unreachable branch
 
 double eval_aexpr(ArithExpr* ast) {
   match(*ast) {
@@ -73,13 +77,32 @@ bool eval_bexpr(BoolExpr* ast) {
   return false; // unreachable
 }
 
-ExprResult eval(Expr* expr) {
+ExprResult eval_expr(Expr* expr) {
   match (*expr) {
     of(BooleanExpr, bexpr) return BooleanResult(eval_bexpr(*bexpr));
     of(ArithmeticExpr, aexpr) return NumberResult(eval_aexpr(*aexpr));
   }
 
   return BooleanResult(false); // unreachable
+}
+
+void eval_stmt(Stmt* stmt) {
+  match (*stmt) {
+    of(DisplayStmt, expr) {
+      ExprResult result = eval_expr(*expr);
+      match(result) {
+        of(BooleanResult, boolean) printf("%s\n", *boolean ? "true" : "false");
+        of(NumberResult, number) printf("%g\n", *number);
+      }
+    }
+    of(ExprStmt, expr) eval_expr(*expr); 
+  }
+}
+
+void eval(Ast* ast) {
+  match (*ast) {
+    of(Statement, stmt) eval_stmt(*stmt);
+  }
 }
 
 /* ------------------------ AST Memory Freeing -------------------------- */
@@ -125,9 +148,16 @@ void ast_free_expr(Expr* ast) {
   free(ast);
 }
 
+void ast_free_stmt(Stmt* ast) {
+  match (*ast) {
+    of(DisplayStmt, expr) ast_free_expr(*expr);
+    of(ExprStmt, expr) ast_free_expr(*expr);
+  }
+}
+
 void ast_free(Ast* ast) {
   match (*ast) {
-    of(Expression, expr) ast_free_expr(*expr);
+    of(Statement, stmt) ast_free_stmt(*stmt);
   }
 }
 

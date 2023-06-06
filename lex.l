@@ -34,6 +34,8 @@ we disable this functionality using noyywrap.
 "true"  { return TRUE;  }
 "false" { return FALSE; }
 
+"display" { return DISPLAY; }
+
 \n      { return EOL; }
 
 [ \t]   { } /* ignore whitespace */
