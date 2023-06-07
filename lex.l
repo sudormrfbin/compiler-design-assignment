@@ -54,6 +54,8 @@ we disable this functionality using noyywrap.
     return NUMBER; 
 }
 
+\"\" { yylval.string = strdup(""); return STRING; } /* Empty string not being recognized by STRING_STATE, so special case it */
+
 \"                      { BEGIN(STRING_STATE);                           }
 <STRING_STATE>[^\"\n]*  { yylval.string = strdup(yytext); return STRING; }
 <STRING_STATE>\"        { BEGIN(INITIAL);                                }
