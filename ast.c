@@ -9,6 +9,19 @@
 extern FILE* yyin;
 extern StatementList* parse_result;
 
+// Prints 2 * level number of spaces
+void print_indent(int level) {
+  for (int i=1; i<=level; i++) printf("  "); 
+}
+
+void iprintf(int indent, const char *s, ...) {
+  va_list ap;
+  va_start(ap, s);
+
+  print_indent(indent);
+  vprintf(s, ap);
+}
+
 void ensure_non_null(void *ptr, char *msg) {
   if (!ptr) {
     yyerror(NULL, msg);
@@ -26,57 +39,13 @@ void ensure_non_null(void *ptr, char *msg) {
 
 ALLOC_NODE(ArithExpr, aexpr)
 ALLOC_NODE(BoolExpr, bexpr)
+ALLOC_NODE(StrExpr, sexpr)
 ALLOC_NODE(Expr, expr)
 ALLOC_NODE(Stmt, stmt)
-ALLOC_NODE(Ast, ast)
-ALLOC_NODE(StrExpr, sexpr)
-
-StatementList* stmt_list_alloc() {
-  StatementList* alloc = malloc(sizeof(StatementList));
-  ensure_non_null(alloc, "out of space");
-  alloc->next = NULL;
-  alloc->prev = NULL;
-  alloc->value = NULL;
-
-  return alloc;
-}
-
-void stmt_list_add(StatementList* start, Stmt* stmt) {
-  if (!start) {
-    start = stmt_list_alloc();
-    start->value = stmt;
-    return;
-  } else {
-    StatementList* end = start;
-    while (end->next) end = end->next;
-
-    StatementList* new = stmt_list_alloc();
-    new->value = stmt;
-    new->prev = end;
-    end->next = new;
-    return;
-  }
-}
-
-void eval_stmt_list(StatementList* start) {
-  StatementList* curr = start;
-  while (curr) {
-    eval_stmt(curr->value);
-    curr = curr->next;
-  }
-}
-
-void stmt_list_free(StatementList* start) {
-  StatementList* curr = start;
-  while (curr) {
-    ast_free_stmt(curr->value);
-    curr = curr->next;
-  }
-}
-
-/* ------------------- Tree Walking Evaluation ---------------------- */
 
 // TODO: exit with error if reaching unreachable branch
+
+/* ------------------------ ArithmeticExpression ------------------------ */
 
 double eval_aexpr(ArithExpr* ast) {
   match(*ast) {
@@ -97,145 +66,6 @@ double eval_aexpr(ArithExpr* ast) {
   }
 
   return -1; // unreachable
-}
-
-bool eval_bexpr(BoolExpr* ast) {
-  match (*ast) {
-    of(RelationalArithExpr, left, relop, right) {
-      switch (*relop) {
-        case RelationalEqual: return eval_aexpr(*left) == eval_aexpr(*right);
-        case Greater:         return eval_aexpr(*left) >  eval_aexpr(*right);
-        case GreaterOrEqual:  return eval_aexpr(*left) >= eval_aexpr(*right);
-        case Less:            return eval_aexpr(*left) <  eval_aexpr(*right);
-        case LessOrEqual:     return eval_aexpr(*left) <= eval_aexpr(*right);
-      }
-    }
-    of(LogicalBoolExpr, left, logicalop, right) {
-      switch (*logicalop) {
-        case And: return eval_bexpr(*left) && eval_bexpr(*right);
-        case Or: return eval_bexpr(*left) || eval_bexpr(*right);
-        case LogicalEqual: return eval_bexpr(*left) == eval_bexpr(*right);
-      }
-    }
-    of(NegatedBoolExpr, bexpr) return !eval_bexpr(*bexpr);
-    of(Boolean, boolean) return *boolean;
-  }
-
-  return false; // unreachable
-}
-
-ExprResult eval_expr(Expr* expr) {
-  match (*expr) {
-    of(BooleanExpr, bexpr) return BooleanResult(eval_bexpr(*bexpr));
-    of(ArithmeticExpr, aexpr) return NumberResult(eval_aexpr(*aexpr));
-    of(StringExpr, sexpr) return StringResult(eval_sexpr(*sexpr));
-  }
-
-  return BooleanResult(false); // unreachable
-}
-
-void eval_stmt(Stmt* stmt) {
-  match (*stmt) {
-    of(DisplayStmt, expr) {
-      ExprResult result = eval_expr(*expr);
-      match(result) {
-        of(BooleanResult, boolean) printf("%s\n", *boolean ? "true" : "false");
-        of(NumberResult, number) printf("%g\n", *number);
-        of(StringResult, string) printf("%s\n", *string);
-      }
-    }
-    of(ExprStmt, expr) eval_expr(*expr); 
-    of(IfStmt, condition, true_stmts, else_stmts) {
-      if (eval_bexpr(*condition)) {
-        eval_stmt_list(*true_stmts);
-      } else {
-        eval_stmt_list(*else_stmts);
-      }
-    }
-  }
-}
-
-void eval(Ast* ast) {
-  match (*ast) {
-    of(Statement, stmt) eval_stmt(*stmt);
-  }
-}
-
-/* ------------------------ AST Memory Freeing -------------------------- */
-
-void ast_free_aexpr(ArithExpr* ast) {
-  match(*ast) {
-    of(BinaryAExpr, left, _, right) {
-      ast_free_aexpr(*left);
-      ast_free_aexpr(*right);
-    }
-    of(UnaryAExpr, _, right) {
-      ast_free_aexpr(*right);
-    }
-    of(Number, _) {}; 
-  }
-
-  free(ast);
-}
-
-void ast_free_bexpr(BoolExpr* ast) {
-  match (*ast) {
-    of(RelationalArithExpr, left, _, right) {
-      ast_free_aexpr(*left);
-      ast_free_aexpr(*right);
-    }
-    of(LogicalBoolExpr, left, _, right) {
-      ast_free_bexpr(*left);
-      ast_free_bexpr(*right);
-    }
-    of(NegatedBoolExpr, bexpr) ast_free_bexpr(*bexpr);
-    of(Boolean, _) {}
-  }
-
-  free(ast);
-}
-
-void ast_free_expr(Expr* ast) {
-  match (*ast) {
-    of(BooleanExpr, bexpr) ast_free_bexpr(*bexpr);
-    of(ArithmeticExpr, aexpr) ast_free_aexpr(*aexpr);
-    of(StringExpr, sexpr) ast_free_sexpr(*sexpr);
-  }
-
-  free(ast);
-}
-
-void ast_free_stmt(Stmt* ast) {
-  match (*ast) {
-    of(DisplayStmt, expr) ast_free_expr(*expr);
-    of(ExprStmt, expr) ast_free_expr(*expr);
-    of(IfStmt, condition, true_stmts, else_stmts) {
-      ast_free_bexpr(*condition);
-      stmt_list_free(*true_stmts);
-      stmt_list_free(*else_stmts);
-    }
-  }
-}
-
-void ast_free(Ast* ast) {
-  match (*ast) {
-    of(Statement, stmt) ast_free_stmt(*stmt);
-  }
-}
-
-/* --------------------------- AST Printing -------------------------- */
-
-// Prints 2 * level number of spaces
-void print_indent(int level) {
-  for (int i=1; i<=level; i++) printf("  "); 
-}
-
-void iprintf(int indent, const char *s, ...) {
-  va_list ap;
-  va_start(ap, s);
-
-  print_indent(indent);
-  vprintf(s, ap);
 }
 
 void print_aexpr(ArithExpr* ast, int ind) {
@@ -276,6 +106,49 @@ void print_aexpr(ArithExpr* ast, int ind) {
   }
 
   ind--;
+}
+
+void ast_free_aexpr(ArithExpr* ast) {
+  match(*ast) {
+    of(BinaryAExpr, left, _, right) {
+      ast_free_aexpr(*left);
+      ast_free_aexpr(*right);
+    }
+    of(UnaryAExpr, _, right) {
+      ast_free_aexpr(*right);
+    }
+    of(Number, _) {}; 
+  }
+
+  free(ast);
+}
+
+/* -------------------------- BoolExpression --------------------------- */
+
+
+bool eval_bexpr(BoolExpr* ast) {
+  match (*ast) {
+    of(RelationalArithExpr, left, relop, right) {
+      switch (*relop) {
+        case RelationalEqual: return eval_aexpr(*left) == eval_aexpr(*right);
+        case Greater:         return eval_aexpr(*left) >  eval_aexpr(*right);
+        case GreaterOrEqual:  return eval_aexpr(*left) >= eval_aexpr(*right);
+        case Less:            return eval_aexpr(*left) <  eval_aexpr(*right);
+        case LessOrEqual:     return eval_aexpr(*left) <= eval_aexpr(*right);
+      }
+    }
+    of(LogicalBoolExpr, left, logicalop, right) {
+      switch (*logicalop) {
+        case And: return eval_bexpr(*left) && eval_bexpr(*right);
+        case Or: return eval_bexpr(*left) || eval_bexpr(*right);
+        case LogicalEqual: return eval_bexpr(*left) == eval_bexpr(*right);
+      }
+    }
+    of(NegatedBoolExpr, bexpr) return !eval_bexpr(*bexpr);
+    of(Boolean, boolean) return *boolean;
+  }
+
+  return false; // unreachable
 }
 
 void print_bexpr(BoolExpr* ast, int ind) {
@@ -323,6 +196,76 @@ void print_bexpr(BoolExpr* ast, int ind) {
   }
 }
 
+void ast_free_bexpr(BoolExpr* ast) {
+  match (*ast) {
+    of(RelationalArithExpr, left, _, right) {
+      ast_free_aexpr(*left);
+      ast_free_aexpr(*right);
+    }
+    of(LogicalBoolExpr, left, _, right) {
+      ast_free_bexpr(*left);
+      ast_free_bexpr(*right);
+    }
+    of(NegatedBoolExpr, bexpr) ast_free_bexpr(*bexpr);
+    of(Boolean, _) {}
+  }
+
+  free(ast);
+}
+
+/* --------------------------- StringExpression --------------------------- */
+
+char* eval_sexpr(StrExpr* ast) {
+  match (*ast) {
+    of(StringConcat, first, second) {
+      char* left = eval_sexpr(*first);
+      char* right = eval_sexpr(*second);
+
+      int size = strlen(left) + strlen(right) + 1;
+      char* new = malloc(size);
+      snprintf(new, size, "%s%s", left, right);
+      return new;
+    }
+    of(String, str) return *str;
+  }
+
+  return NULL; // unreachable
+}
+
+void print_sexpr(StrExpr* ast, int ind) {
+  match (*ast) {
+    of(StringConcat, first, second) {
+      iprintf(ind, "StringConcat(\n");
+      print_sexpr(*first, ind + 1);
+      print_sexpr(*second, ind + 1);
+      iprintf(ind, ")\n");
+    }
+    of(String, str) iprintf(ind, "String(\"%s\")", *str);
+  }
+}
+
+void ast_free_sexpr(StrExpr* ast) {
+  match (*ast) {
+    of(StringConcat, first, second) {
+      ast_free_sexpr(*first);
+      ast_free_sexpr(*second);
+    }
+    of(String, str) free(*str);
+  }
+}
+
+/* ----------------------------- Expression ----------------------------- */
+
+ExprResult eval_expr(Expr* expr) {
+  match (*expr) {
+    of(BooleanExpr, bexpr) return BooleanResult(eval_bexpr(*bexpr));
+    of(ArithmeticExpr, aexpr) return NumberResult(eval_aexpr(*aexpr));
+    of(StringExpr, sexpr) return StringResult(eval_sexpr(*sexpr));
+  }
+
+  return BooleanResult(false); // unreachable
+}
+
 void print_expr(Expr* ast, int ind) {
   match (*ast) {
     of(BooleanExpr, bexpr) {
@@ -339,6 +282,39 @@ void print_expr(Expr* ast, int ind) {
       iprintf(ind, "StringExpression(\n");
       print_sexpr(*sexpr, ind + 1);
       iprintf(ind, ")\n");
+    }
+  }
+}
+
+void ast_free_expr(Expr* ast) {
+  match (*ast) {
+    of(BooleanExpr, bexpr) ast_free_bexpr(*bexpr);
+    of(ArithmeticExpr, aexpr) ast_free_aexpr(*aexpr);
+    of(StringExpr, sexpr) ast_free_sexpr(*sexpr);
+  }
+
+  free(ast);
+}
+
+/* ----------------------------- Statement ----------------------------- */
+
+void eval_stmt(Stmt* stmt) {
+  match (*stmt) {
+    of(DisplayStmt, expr) {
+      ExprResult result = eval_expr(*expr);
+      match(result) {
+        of(BooleanResult, boolean) printf("%s\n", *boolean ? "true" : "false");
+        of(NumberResult, number) printf("%g\n", *number);
+        of(StringResult, string) printf("%s\n", *string);
+      }
+    }
+    of(ExprStmt, expr) eval_expr(*expr); 
+    of(IfStmt, condition, true_stmts, else_stmts) {
+      if (eval_bexpr(*condition)) {
+        eval_stmt_list(*true_stmts);
+      } else {
+        eval_stmt_list(*else_stmts);
+      }
     }
   }
 }
@@ -377,6 +353,55 @@ void print_stmt(Stmt *ast, int ind) {
   }
 }
 
+void ast_free_stmt(Stmt* ast) {
+  match (*ast) {
+    of(DisplayStmt, expr) ast_free_expr(*expr);
+    of(ExprStmt, expr) ast_free_expr(*expr);
+    of(IfStmt, condition, true_stmts, else_stmts) {
+      ast_free_bexpr(*condition);
+      stmt_list_free(*true_stmts);
+      stmt_list_free(*else_stmts);
+    }
+  }
+}
+
+/* -------------------------- StatementList -------------------------- */
+
+StatementList* stmt_list_alloc() {
+  StatementList* alloc = malloc(sizeof(StatementList));
+  ensure_non_null(alloc, "out of space");
+  alloc->next = NULL;
+  alloc->prev = NULL;
+  alloc->value = NULL;
+
+  return alloc;
+}
+
+void stmt_list_add(StatementList* start, Stmt* stmt) {
+  if (!start) {
+    start = stmt_list_alloc();
+    start->value = stmt;
+    return;
+  } else {
+    StatementList* end = start;
+    while (end->next) end = end->next;
+
+    StatementList* new = stmt_list_alloc();
+    new->value = stmt;
+    new->prev = end;
+    end->next = new;
+    return;
+  }
+}
+
+void eval_stmt_list(StatementList* start) {
+  StatementList* curr = start;
+  while (curr) {
+    eval_stmt(curr->value);
+    curr = curr->next;
+  }
+}
+
 void print_stmt_list(StatementList* start, int ind) {
   StatementList* curr = start;
   while (curr) {
@@ -388,42 +413,11 @@ void print_stmt_list(StatementList* start, int ind) {
   }
 }
 
-char* eval_sexpr(StrExpr* ast) {
-  match (*ast) {
-    of(StringConcat, first, second) {
-      char* left = eval_sexpr(*first);
-      char* right = eval_sexpr(*second);
-
-      int size = strlen(left) + strlen(right) + 1;
-      char* new = malloc(size);
-      snprintf(new, size, "%s%s", left, right);
-      return new;
-    }
-    of(String, str) return *str;
-  }
-
-  return NULL; // unreachable
-}
-
-void ast_free_sexpr(StrExpr* ast) {
-  match (*ast) {
-    of(StringConcat, first, second) {
-      ast_free_sexpr(*first);
-      ast_free_sexpr(*second);
-    }
-    of(String, str) free(*str);
-  }
-}
-
-void print_sexpr(StrExpr* ast, int ind) {
-  match (*ast) {
-    of(StringConcat, first, second) {
-      iprintf(ind, "StringConcat(\n");
-      print_sexpr(*first, ind + 1);
-      print_sexpr(*second, ind + 1);
-      iprintf(ind, ")\n");
-    }
-    of(String, str) iprintf(ind, "String(\"%s\")", *str);
+void stmt_list_free(StatementList* start) {
+  StatementList* curr = start;
+  while (curr) {
+    ast_free_stmt(curr->value);
+    curr = curr->next;
   }
 }
 

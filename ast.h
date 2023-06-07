@@ -83,11 +83,6 @@ void stmt_list_free(StatementList* stmts);
 void print_stmt_list(StatementList* ast, int indent);
 
 datatype(
-  Ast,
-  (Statement, Stmt *)
-);
-
-datatype(
   ExprResult,
   (BooleanResult, bool),
   (NumberResult, double),
@@ -119,13 +114,3 @@ Stmt* stmt_alloc(Stmt ast);
 void eval_stmt(Stmt* ast);
 void ast_free_stmt(Stmt* ast);
 void print_stmt(Stmt* ast, int indent);
-
-Ast* ast_alloc(Ast ast);
-void eval(Ast* ast);
-void ast_free(Ast* ast);
-void print_ast(Ast* ast, int indent);
-
-
-
-
-
