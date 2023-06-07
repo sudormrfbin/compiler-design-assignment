@@ -14,6 +14,7 @@ void print_indent(int level) {
   for (int i=1; i<=level; i++) printf("  "); 
 }
 
+// Like printf, but indents the string by the given indent level.
 void iprintf(int indent, const char *s, ...) {
   va_list ap;
   va_start(ap, s);
@@ -29,10 +30,12 @@ void ensure_non_null(void *ptr, char *msg) {
   }
 }
 
-inline void unreachable(const char *func_name) {
+void unreachable(const char *func_name) {
   fprintf(stderr, "reached an unreachable block in function '%s'", func_name);
   exit(1);
 }
+
+/* ----------------------------------------------------------------- */
 
 #define ALLOC_NODE(type, node) \
     type* node##_alloc(type ast) { \
