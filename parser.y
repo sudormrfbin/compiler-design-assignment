@@ -52,6 +52,7 @@ int yylex();
 
 %token IF
 %token THEN
+%token ELSE
 %token ENDIF
 
 /* Explicitly declare precedence instead of implicitly doing it
@@ -89,7 +90,10 @@ stmt: expr-stmt
   ;
 
 if-stmt: IF bexpr THEN EOL stmt-list ENDIF EOL {
-    $$ = stmt_alloc(IfStmt($bexpr, $[stmt-list]));
+    $$ = stmt_alloc(IfStmt($bexpr, $[stmt-list], NULL));
+  }
+  | IF bexpr THEN EOL stmt-list[true-stmts] ELSE EOL stmt-list[else-stmts] ENDIF EOL {
+    $$ = stmt_alloc(IfStmt($bexpr, $[true-stmts], $[else-stmts]));
   }
   ;
 

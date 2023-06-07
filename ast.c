@@ -145,9 +145,11 @@ void eval_stmt(Stmt* stmt) {
       }
     }
     of(ExprStmt, expr) eval_expr(*expr); 
-    of(IfStmt, condition, true_stmts) {
+    of(IfStmt, condition, true_stmts, else_stmts) {
       if (eval_bexpr(*condition)) {
         eval_stmt_list(*true_stmts);
+      } else {
+        eval_stmt_list(*else_stmts);
       }
     }
   }
@@ -207,9 +209,10 @@ void ast_free_stmt(Stmt* ast) {
   match (*ast) {
     of(DisplayStmt, expr) ast_free_expr(*expr);
     of(ExprStmt, expr) ast_free_expr(*expr);
-    of(IfStmt, condition, true_stmts) {
+    of(IfStmt, condition, true_stmts, else_stmts) {
       ast_free_bexpr(*condition);
       stmt_list_free(*true_stmts);
+      stmt_list_free(*else_stmts);
     }
   }
 }
@@ -352,7 +355,7 @@ void print_stmt(Stmt *ast, int ind) {
       print_expr(*expr, ind + 1);
       iprintf(ind, ")\n");
     }; 
-    of(IfStmt, condition, true_stmts) {
+    of(IfStmt, condition, true_stmts, else_stmts) {
       iprintf(ind, "IfStatement(\n");
 
       iprintf(ind + 1, "Condition(\n");
@@ -362,6 +365,12 @@ void print_stmt(Stmt *ast, int ind) {
       iprintf(ind + 1, "TrueStatements(\n");
       print_stmt_list(*true_stmts, ind + 2);
       iprintf(ind + 1, ")\n");
+
+      if (*else_stmts) {
+        iprintf(ind + 1, "ElseStatements(\n");
+        print_stmt_list(*else_stmts, ind + 2);
+        iprintf(ind + 1, ")\n");
+      }
 
       iprintf(ind, ")\n");
     }

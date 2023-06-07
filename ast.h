@@ -61,12 +61,13 @@ datatype(
 
 typedef BoolExpr Condition;
 typedef StatementList TrueStatements;
+typedef StatementList ElseStatements;
 
 datatype(
   Stmt,
   (DisplayStmt, Expr*),
   (ExprStmt, Expr*),
-  (IfStmt, Condition*, TrueStatements*)
+  (IfStmt, Condition*, TrueStatements*, ElseStatements*)
 );
 
 struct StatementList {

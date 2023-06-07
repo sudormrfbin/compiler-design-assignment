@@ -40,6 +40,7 @@ we disable this functionality using noyywrap.
 
 "if"    { return IF;    }
 "then"  { return THEN;  }
+"else"  { return ELSE;  }
 "endif" { return ENDIF; }
 
 \n+      { return EOL; } /* compressing multiple newlines makes it easier to write grammar rules */
