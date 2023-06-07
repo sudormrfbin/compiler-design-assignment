@@ -29,6 +29,11 @@ void ensure_non_null(void *ptr, char *msg) {
   }
 }
 
+inline void unreachable(const char *func_name) {
+  fprintf(stderr, "reached an unreachable block in function '%s'", func_name);
+  exit(1);
+}
+
 #define ALLOC_NODE(type, node) \
     type* node##_alloc(type ast) { \
         type* alloc = malloc(sizeof(ast)); \
@@ -42,8 +47,6 @@ ALLOC_NODE(BoolExpr, bexpr)
 ALLOC_NODE(StrExpr, sexpr)
 ALLOC_NODE(Expr, expr)
 ALLOC_NODE(Stmt, stmt)
-
-// TODO: exit with error if reaching unreachable branch
 
 /* ------------------------ ArithmeticExpression ------------------------ */
 
@@ -65,7 +68,8 @@ double eval_aexpr(ArithExpr* ast) {
     of(Number, num) return *num; 
   }
 
-  return -1; // unreachable
+  unreachable("eval_aexpr");
+  return -1;
 }
 
 void print_aexpr(ArithExpr* ast, int ind) {
@@ -148,7 +152,8 @@ bool eval_bexpr(BoolExpr* ast) {
     of(Boolean, boolean) return *boolean;
   }
 
-  return false; // unreachable
+  unreachable("eval_bexpr");
+  return false;
 }
 
 void print_bexpr(BoolExpr* ast, int ind) {
@@ -229,7 +234,8 @@ char* eval_sexpr(StrExpr* ast) {
     of(String, str) return *str;
   }
 
-  return NULL; // unreachable
+  unreachable("eval_sexpr");
+  return NULL;
 }
 
 void print_sexpr(StrExpr* ast, int ind) {
@@ -263,7 +269,8 @@ ExprResult eval_expr(Expr* expr) {
     of(StringExpr, sexpr) return StringResult(eval_sexpr(*sexpr));
   }
 
-  return BooleanResult(false); // unreachable
+  unreachable("eval_expr");
+  return BooleanResult(false);
 }
 
 void print_expr(Expr* ast, int ind) {
