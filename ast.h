@@ -79,7 +79,7 @@ struct StatementList {
 };
 
 StatementList* stmt_list_alloc();
-void stmt_list_add(StatementList* start, Stmt* stmt);
+void stmt_list_add(StatementList** start, Stmt* stmt);
 void eval_stmt_list(StatementList* stmts);
 void stmt_list_free(StatementList* stmts);
 void print_stmt_list(StatementList* ast, int indent);

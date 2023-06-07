@@ -1623,8 +1623,8 @@ yyreduce:
   case 3: /* stmt-list: stmt  */
 #line 82 "parser.y"
                 {
-    StatementList* ptr = stmt_list_alloc();
-    stmt_list_add(ptr, (yyvsp[0].stmt));
+    StatementList* ptr = NULL;
+    stmt_list_add(&ptr, (yyvsp[0].stmt));
     (yyval.statement_list) = ptr;
   }
 #line 1631 "parser.tab.c"
@@ -1633,7 +1633,7 @@ yyreduce:
   case 4: /* stmt-list: stmt-list stmt  */
 #line 87 "parser.y"
                    {
-    stmt_list_add((yyvsp[-1].statement_list), (yyvsp[0].stmt));
+    stmt_list_add(&(yyvsp[-1].statement_list), (yyvsp[0].stmt));
     (yyval.statement_list) = (yyvsp[-1].statement_list);
   }
 #line 1640 "parser.tab.c"

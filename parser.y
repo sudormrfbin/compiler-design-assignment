@@ -80,12 +80,12 @@ program: stmt-list {
   ;
 
 stmt-list: stmt {
-    StatementList* ptr = stmt_list_alloc();
-    stmt_list_add(ptr, $stmt);
+    StatementList* ptr = NULL;
+    stmt_list_add(&ptr, $stmt);
     $$ = ptr;
   }
   | stmt-list stmt {
-    stmt_list_add($1, $2);
+    stmt_list_add(&$1, $2);
     $$ = $1;
   }
   ;

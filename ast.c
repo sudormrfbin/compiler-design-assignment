@@ -413,13 +413,13 @@ StatementList* stmt_list_alloc() {
   return alloc;
 }
 
-void stmt_list_add(StatementList* start, Stmt* stmt) {
-  if (!start) {
-    start = stmt_list_alloc();
-    start->value = stmt;
+void stmt_list_add(StatementList** start, Stmt* stmt) {
+  if (!(*start)) {
+    *start = stmt_list_alloc();
+    (*start)->value = stmt;
     return;
   } else {
-    StatementList* end = start;
+    StatementList* end = *start;
     while (end->next) end = end->next;
 
     StatementList* new = stmt_list_alloc();
@@ -460,6 +460,8 @@ void stmt_list_free(StatementList* start) {
 /* --------------------------- Symbol table --------------------------- */
 
 Symbol* symbol_alloc(char* name, ExprResult value) {
+
+  // TODO: Add commands for printing tokens, ast, 3 address code, symtab
   Symbol* alloc = malloc(sizeof(Symbol));
   // TODO: ensure_non_null
   alloc->name = name;
@@ -540,7 +542,7 @@ int main(int argc, char **argv) {
   // TODO: Add commands for printing tokens, ast, 3 address code, symtab
 
   yyparse();
-  // print_statements(parse_result, 0);
+  // print_stmt_list(parse_result, 0);
   eval_stmt_list(parse_result);
   stmt_list_free(parse_result);
 
