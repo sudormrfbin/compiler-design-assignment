@@ -129,4 +129,5 @@ struct Symbol {
 
 void symbol_add(SymbolTable** head, char* name, ExprResult value);
 ExprResult* symbol_get(SymbolTable* head, char* name);
+void free_symtab(SymbolTable* head);
 void print_symtab(SymbolTable* head);

@@ -464,7 +464,7 @@ Symbol* symbol_alloc(char* name, ExprResult value) {
   // TODO: Add commands for printing tokens, ast, 3 address code, symtab
   Symbol* alloc = malloc(sizeof(Symbol));
   // TODO: ensure_non_null
-  alloc->name = name;
+  alloc->name = strdup(name);
   alloc->value = value;
   alloc->next = NULL;
   return alloc;
@@ -518,6 +518,15 @@ void print_symtab(SymbolTable* head) {
   }
 }
 
+void free_symtab(SymbolTable* head) {
+  Symbol* curr = head;
+
+  while (curr) {
+    free(curr->name);
+    curr = curr->next;
+  }
+}
+
 /* ---------------------------------------------------------------------- */
 
 void yyerror(const char *s, ...) {
@@ -545,6 +554,7 @@ int main(int argc, char **argv) {
   // print_stmt_list(parse_result, 0);
   eval_stmt_list(parse_result);
   stmt_list_free(parse_result);
+  free_symtab(symtab);
 
   return 0;
 }
