@@ -56,22 +56,23 @@ extern int yydebug;
     YYUNDEF = 257,                 /* "invalid token"  */
     NUMBER = 258,                  /* NUMBER  */
     STRING = 259,                  /* STRING  */
-    EOL = 260,                     /* EOL  */
-    GT = 261,                      /* GT  */
-    GTE = 262,                     /* GTE  */
-    LT = 263,                      /* LT  */
-    LTE = 264,                     /* LTE  */
-    AND = 265,                     /* AND  */
-    OR = 266,                      /* OR  */
-    EQEQ = 267,                    /* EQEQ  */
-    TRUE = 268,                    /* TRUE  */
-    FALSE = 269,                   /* FALSE  */
-    DISPLAY = 270,                 /* DISPLAY  */
-    IF = 271,                      /* IF  */
-    THEN = 272,                    /* THEN  */
-    ELSE = 273,                    /* ELSE  */
-    ENDIF = 274,                   /* ENDIF  */
-    UMINUS = 275                   /* UMINUS  */
+    IDENT = 260,                   /* IDENT  */
+    EOL = 261,                     /* EOL  */
+    GT = 262,                      /* GT  */
+    GTE = 263,                     /* GTE  */
+    LT = 264,                      /* LT  */
+    LTE = 265,                     /* LTE  */
+    AND = 266,                     /* AND  */
+    OR = 267,                      /* OR  */
+    EQEQ = 268,                    /* EQEQ  */
+    TRUE = 269,                    /* TRUE  */
+    FALSE = 270,                   /* FALSE  */
+    DISPLAY = 271,                 /* DISPLAY  */
+    IF = 272,                      /* IF  */
+    THEN = 273,                    /* THEN  */
+    ELSE = 274,                    /* ELSE  */
+    ENDIF = 275,                   /* ENDIF  */
+    UMINUS = 276                   /* UMINUS  */
   };
   typedef enum yytokentype yytoken_kind_t;
 #endif
@@ -80,7 +81,7 @@ extern int yydebug;
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
 union YYSTYPE
 {
-#line 18 "parser.y"
+#line 21 "parser.y"
 
   StrExpr *str_expr;
   ArithExpr *arith_expr;
@@ -90,8 +91,9 @@ union YYSTYPE
   StatementList *statement_list;
   double number;
   char* string;
+  char* ident;
 
-#line 95 "parser.tab.h"
+#line 97 "parser.tab.h"
 
 };
 typedef union YYSTYPE YYSTYPE;

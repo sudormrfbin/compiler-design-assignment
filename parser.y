@@ -11,6 +11,9 @@
 /* Global variable for storing the resulting AST after parsing a file */
 StatementList* parse_result = NULL;
 
+/* Global variable pointing to the symbol table */
+SymbolTable* symtab = NULL;
+
 int yylex();
 
 %}
@@ -24,16 +27,19 @@ int yylex();
   StatementList *statement_list;
   double number;
   char* string;
+  char* ident;
 }
 
 %token <number> NUMBER
 %token <string> STRING
+%token <ident>  IDENT
 
 %type <str_expr> sexpr
 %type <arith_expr> aexpr
 %type <bool_expr> bexpr
+%type <ident> iexpr
 %type <expr> expr
-%type <stmt> stmt display-stmt expr-stmt if-stmt
+%type <stmt> stmt display-stmt expr-stmt if-stmt assign-stmt
 %type <statement_list> stmt-list
 
 %token EOL
@@ -87,6 +93,12 @@ stmt-list: stmt {
 stmt: expr-stmt
   | display-stmt
   | if-stmt
+  | assign-stmt
+  ;
+
+assign-stmt: IDENT '=' expr EOL {
+    $$ = stmt_alloc(AssignStmt($1, $expr));
+  }
   ;
 
 if-stmt: IF bexpr THEN EOL stmt-list ENDIF EOL {
@@ -104,6 +116,7 @@ expr-stmt: expr EOL { $$ = stmt_alloc(ExprStmt($expr)); };
 expr: aexpr { $$ = expr_alloc(ArithmeticExpr($1)); }
   | bexpr { $$ = expr_alloc(BooleanExpr($1)); }
   | sexpr { $$ = expr_alloc(StringExpr($1)); }
+  | iexpr { $$ = expr_alloc(IdentExpr($1)); }
   ;
 
 /* Arithmetic expression */
@@ -133,6 +146,9 @@ bexpr:
 sexpr: STRING { $$ = sexpr_alloc(String($1)); }
   | sexpr '+' sexpr { $$ = sexpr_alloc(StringConcat($1, $3)); }
   /* TODO: Add == */
+  ;
+
+iexpr: IDENT
   ;
 
 %%

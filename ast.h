@@ -56,7 +56,8 @@ datatype(
   Expr,
   (BooleanExpr, BoolExpr *),
   (ArithmeticExpr, ArithExpr *),
-  (StringExpr, StrExpr *)
+  (StringExpr, StrExpr *),
+  (IdentExpr, char*)
 );
 
 typedef BoolExpr Condition;
@@ -67,13 +68,14 @@ datatype(
   Stmt,
   (DisplayStmt, Expr*),
   (ExprStmt, Expr*),
+  (AssignStmt, char*, Expr*),
   (IfStmt, Condition*, TrueStatements*, ElseStatements*)
 );
 
 struct StatementList {
   Stmt* value;
   StatementList* next;
-  StatementList* prev;
+  StatementList* prev; // Remove prev ref
 };
 
 StatementList* stmt_list_alloc();
@@ -114,3 +116,17 @@ Stmt* stmt_alloc(Stmt ast);
 void eval_stmt(Stmt* ast);
 void ast_free_stmt(Stmt* ast);
 void print_stmt(Stmt* ast, int indent);
+
+typedef struct Symbol Symbol;
+typedef Symbol SymbolTable;
+
+struct Symbol {
+  char* name;
+  ExprResult value;
+
+  Symbol* next;
+};
+
+void symbol_add(SymbolTable** head, char* name, ExprResult value);
+ExprResult* symbol_get(SymbolTable* head, char* name);
+void print_symtab(SymbolTable* head);

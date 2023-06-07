@@ -6,6 +6,7 @@
 #include "datatype99.h"
 #include "parser.tab.h"
 
+extern SymbolTable* symtab;
 extern FILE* yyin;
 extern StatementList* parse_result;
 
@@ -25,7 +26,7 @@ void iprintf(int indent, const char *s, ...) {
 
 void ensure_non_null(void *ptr, char *msg) {
   if (!ptr) {
-    yyerror(NULL, msg);
+    fprintf(stderr, "%s", msg);
     exit(1);
   }
 }
@@ -270,6 +271,14 @@ ExprResult eval_expr(Expr* expr) {
     of(BooleanExpr, bexpr) return BooleanResult(eval_bexpr(*bexpr));
     of(ArithmeticExpr, aexpr) return NumberResult(eval_aexpr(*aexpr));
     of(StringExpr, sexpr) return StringResult(eval_sexpr(*sexpr));
+    of(IdentExpr, ident) {
+      ExprResult* value = symbol_get(symtab, *ident);
+      if (!value) {
+        fprintf(stderr, "Runtime error: undefined variable '%s'\n", *ident);
+        exit(1);
+      }
+      return *value;
+    }
   }
 
   unreachable("eval_expr");
@@ -293,6 +302,9 @@ void print_expr(Expr* ast, int ind) {
       print_sexpr(*sexpr, ind + 1);
       iprintf(ind, ")\n");
     }
+    of(IdentExpr, ident) {
+      iprintf(ind, "Variable(\"%s\")\n", *ident);
+    }
   }
 }
 
@@ -301,6 +313,7 @@ void ast_free_expr(Expr* ast) {
     of(BooleanExpr, bexpr) ast_free_bexpr(*bexpr);
     of(ArithmeticExpr, aexpr) ast_free_aexpr(*aexpr);
     of(StringExpr, sexpr) ast_free_sexpr(*sexpr);
+    of(IdentExpr, ident) free(*ident);
   }
 
   free(ast);
@@ -319,6 +332,9 @@ void eval_stmt(Stmt* stmt) {
       }
     }
     of(ExprStmt, expr) eval_expr(*expr); 
+    of(AssignStmt, ident, value) {
+      symbol_add(&symtab, *ident, eval_expr(*value));
+    }
     of(IfStmt, condition, true_stmts, else_stmts) {
       if (eval_bexpr(*condition)) {
         eval_stmt_list(*true_stmts);
@@ -339,6 +355,12 @@ void print_stmt(Stmt *ast, int ind) {
     of(ExprStmt, expr) {
       iprintf(ind, "ExpressionStatement(\n");
       print_expr(*expr, ind + 1);
+      iprintf(ind, ")\n");
+    }; 
+    of(AssignStmt, ident, value) {
+      iprintf(ind, "AssignmentStatement(\n");
+      iprintf(ind + 1, "Ident(%s)", *ident);
+      print_expr(*value, ind + 1);
       iprintf(ind, ")\n");
     }; 
     of(IfStmt, condition, true_stmts, else_stmts) {
@@ -367,6 +389,10 @@ void ast_free_stmt(Stmt* ast) {
   match (*ast) {
     of(DisplayStmt, expr) ast_free_expr(*expr);
     of(ExprStmt, expr) ast_free_expr(*expr);
+    of(AssignStmt, ident, value) {
+      free(*ident);
+      ast_free_expr(*value);
+    }
     of(IfStmt, condition, true_stmts, else_stmts) {
       ast_free_bexpr(*condition);
       stmt_list_free(*true_stmts);
@@ -431,7 +457,66 @@ void stmt_list_free(StatementList* start) {
   }
 }
 
-/* ------------------------------------------------------------------- */
+/* --------------------------- Symbol table --------------------------- */
+
+Symbol* symbol_alloc(char* name, ExprResult value) {
+  Symbol* alloc = malloc(sizeof(Symbol));
+  // TODO: ensure_non_null
+  alloc->name = name;
+  alloc->value = value;
+  alloc->next = NULL;
+  return alloc;
+}
+
+void symbol_add(SymbolTable** head, char* name, ExprResult value) {
+  if (!(*head)) {
+    *head = symbol_alloc(name, value);
+    return;
+  } else {
+    Symbol* curr = *head;
+    Symbol* end;
+
+    do {
+      if (strcmp(curr->name, name) == 0) {
+        curr->value = value;
+        return;
+      }
+      end = curr;
+    } while ((curr = curr->next));
+
+    Symbol* new = symbol_alloc(name, value);
+    end->next = new;
+  }
+}
+
+ExprResult* symbol_get(SymbolTable* head, char* name) {
+  Symbol* curr = head;
+
+  while (curr) {
+    if (strcmp(curr->name, name) == 0) {
+      return &(curr->value);
+    }
+    curr = curr->next;
+  }
+
+  return NULL;
+}
+
+void print_symtab(SymbolTable* head) {
+  Symbol* curr = head;
+
+  while (curr) {
+    printf("%s = ", curr->name);
+    match(curr->value) {
+      of(BooleanResult, boolean) printf("%s\n", *boolean ? "true" : "false");
+      of(NumberResult, number) printf("%g\n", *number);
+      of(StringResult, string) printf("%s\n", *string);
+    }
+    curr = curr->next;
+  }
+}
+
+/* ---------------------------------------------------------------------- */
 
 void yyerror(const char *s, ...) {
   va_list ap;
@@ -451,6 +536,8 @@ int main(int argc, char **argv) {
       return 1;
     }
   }
+
+  // TODO: Add commands for printing tokens, ast, 3 address code, symtab
 
   yyparse();
   // print_statements(parse_result, 0);
