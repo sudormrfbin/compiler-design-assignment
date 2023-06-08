@@ -74,11 +74,12 @@ int yylex();
 
 %%
 
-/* TODO: Try adding eol: EOL | eol EOL; to compress multiple newlines into one token */
+program: stmt-list { parse_result = $1; }
+  | eol stmt-list  { parse_result = $2; }
+  ;
 
-program: stmt-list {
-  parse_result = $1;
-}
+eol: EOL
+  | eol EOL
   ;
 
 stmt-list: stmt {
@@ -98,29 +99,30 @@ stmt: expr-stmt
   | assign-stmt
   ;
 
-assign-stmt: IDENT '=' expr EOL {
+assign-stmt: IDENT '=' expr eol {
     $$ = stmt_alloc(AssignStmt($1, $expr));
   }
   ;
 
-if-stmt: IF bexpr THEN EOL stmt-list else-if-chain ENDIF EOL {
+/* TODO: extract out else-stmts */
+if-stmt: IF bexpr THEN eol stmt-list else-if-chain ENDIF eol {
     $$ = stmt_alloc(IfStmt($bexpr, $[stmt-list], $[else-if-chain], NULL));
   }
-  | IF bexpr THEN EOL stmt-list[true-stmts] else-if-chain ELSE EOL stmt-list[else-stmts] ENDIF EOL {
+  | IF bexpr THEN eol stmt-list[true-stmts] else-if-chain ELSE eol stmt-list[else-stmts] ENDIF eol {
     $$ = stmt_alloc(IfStmt($bexpr, $[true-stmts], $[else-if-chain], $[else-stmts]));
   }
   ;
 
 else-if-chain: { $$ = NULL; }
-  | else-if-chain ELSE IF bexpr THEN EOL stmt-list {
+  | else-if-chain ELSE IF bexpr THEN eol stmt-list {
     else_if_add(&$1, $bexpr, $[stmt-list]);
     $$ = $1;
   }
   ;
 
-display-stmt: DISPLAY expr EOL { $$ = stmt_alloc(DisplayStmt($expr)); };
+display-stmt: DISPLAY expr eol { $$ = stmt_alloc(DisplayStmt($expr)); };
 
-expr-stmt: expr EOL { $$ = stmt_alloc(ExprStmt($expr)); };
+expr-stmt: expr eol { $$ = stmt_alloc(ExprStmt($expr)); };
 
 expr: aexpr { $$ = expr_alloc(ArithmeticExpr($1)); }
   | bexpr { $$ = expr_alloc(BooleanExpr($1)); }

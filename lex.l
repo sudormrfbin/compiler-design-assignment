@@ -44,7 +44,7 @@ we disable this functionality using noyywrap.
 "else"  { return ELSE;  }
 "endif" { return ENDIF; }
 
-\n+      { return EOL; } /* compressing multiple newlines makes it easier to write grammar rules */
+\n      { return EOL; }
 
 [ \t]   { } /* ignore whitespace */
 "//".+  { } /* ignore comments   */
