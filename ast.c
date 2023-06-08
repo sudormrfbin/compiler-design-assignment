@@ -49,7 +49,7 @@ void unreachable(const char *func_name) {
 ALLOC_NODE(ArithExpr, aexpr)
 ALLOC_NODE(BoolExpr, bexpr)
 ALLOC_NODE(StrExpr, sexpr)
-ALLOC_NODE(Expr, expr)
+ALLOC_NODE(LiteralExpr, literal_expr)
 ALLOC_NODE(Stmt, stmt)
 
 /* ------------------------ ArithmeticExpression ------------------------ */
@@ -266,7 +266,7 @@ void free_sexpr(StrExpr* ast) {
 
 /* ----------------------------- Expression ----------------------------- */
 
-ExprResult eval_expr(Expr* expr) {
+ExprResult eval_literal_expr(LiteralExpr* expr) {
   match (*expr) {
     of(BooleanExpr, bexpr) return BooleanResult(eval_bexpr(*bexpr));
     of(ArithmeticExpr, aexpr) return NumberResult(eval_aexpr(*aexpr));
@@ -281,11 +281,11 @@ ExprResult eval_expr(Expr* expr) {
     }
   }
 
-  unreachable("eval_expr");
+  unreachable("eval_literal_expr");
   return BooleanResult(false);
 }
 
-void print_expr(Expr* ast, int ind) {
+void print_literal_expr(LiteralExpr* ast, int ind) {
   match (*ast) {
     of(BooleanExpr, bexpr) {
       iprintf(ind, "BooleanExpression(\n");
@@ -308,7 +308,7 @@ void print_expr(Expr* ast, int ind) {
   }
 }
 
-void free_expr(Expr* ast) {
+void free_literal_expr(LiteralExpr* ast) {
   match (*ast) {
     of(BooleanExpr, bexpr) free_bexpr(*bexpr);
     of(ArithmeticExpr, aexpr) free_aexpr(*aexpr);
@@ -324,16 +324,16 @@ void free_expr(Expr* ast) {
 void eval_stmt(Stmt* stmt) {
   match (*stmt) {
     of(DisplayStmt, expr) {
-      ExprResult result = eval_expr(*expr);
+      ExprResult result = eval_literal_expr(*expr);
       match(result) {
         of(BooleanResult, boolean) printf("%s\n", *boolean ? "true" : "false");
         of(NumberResult, number) printf("%g\n", *number);
         of(StringResult, string) printf("%s\n", *string);
       }
     }
-    of(ExprStmt, expr) eval_expr(*expr); 
+    of(ExprStmt, expr) eval_literal_expr(*expr); 
     of(AssignStmt, ident, value) {
-      add_symbol(&symtab, *ident, eval_expr(*value));
+      add_symbol(&symtab, *ident, eval_literal_expr(*value));
     }
     of(IfStmt, condition, true_stmts, else_if, else_stmts) {
       if (eval_bexpr(*condition)) {
@@ -352,18 +352,18 @@ void print_stmt(Stmt *ast, int ind) {
   match (*ast) {
     of(DisplayStmt, expr) {
       iprintf(ind, "DisplayStatement(\n");
-      print_expr(*expr, ind + 1);
+      print_literal_expr(*expr, ind + 1);
       iprintf(ind, ")\n");
     }
     of(ExprStmt, expr) {
       iprintf(ind, "ExpressionStatement(\n");
-      print_expr(*expr, ind + 1);
+      print_literal_expr(*expr, ind + 1);
       iprintf(ind, ")\n");
     }; 
     of(AssignStmt, ident, value) {
       iprintf(ind, "AssignmentStatement(\n");
       iprintf(ind + 1, "Ident(%s)", *ident);
-      print_expr(*value, ind + 1);
+      print_literal_expr(*value, ind + 1);
       iprintf(ind, ")\n");
     }; 
     of(IfStmt, condition, true_stmts, else_if, else_stmts) {
@@ -394,11 +394,11 @@ void print_stmt(Stmt *ast, int ind) {
 
 void free_stmt(Stmt* ast) {
   match (*ast) {
-    of(DisplayStmt, expr) free_expr(*expr);
-    of(ExprStmt, expr) free_expr(*expr);
+    of(DisplayStmt, expr) free_literal_expr(*expr);
+    of(ExprStmt, expr) free_literal_expr(*expr);
     of(AssignStmt, ident, value) {
       free(*ident);
-      free_expr(*value);
+      free_literal_expr(*value);
     }
     of(IfStmt, condition, true_stmts, else_if, else_stmts) {
       free_bexpr(*condition);

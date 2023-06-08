@@ -53,7 +53,7 @@ datatype(
 );
 
 datatype(
-  Expr,
+  LiteralExpr,
   (BooleanExpr, BoolExpr *),
   (ArithmeticExpr, ArithExpr *),
   (StringExpr, StrExpr *),
@@ -74,9 +74,9 @@ struct ElseIfStatement {
 
 datatype(
   Stmt,
-  (DisplayStmt, Expr*),
-  (ExprStmt, Expr*),
-  (AssignStmt, char*, Expr*),
+  (DisplayStmt, LiteralExpr*),
+  (ExprStmt, LiteralExpr*),
+  (AssignStmt, char*, LiteralExpr*),
   (IfStmt, Condition*, TrueStatements*, ElseIfStatement*, ElseStatements*)
 );
 
@@ -115,10 +115,10 @@ char* eval_sexpr(StrExpr* ast);
 void print_sexpr(StrExpr* ast, int indent);
 void free_sexpr(StrExpr* ast);
 
-Expr* alloc_expr(Expr ast);
-ExprResult eval_expr(Expr *);
-void print_expr(Expr* ast, int indent);
-void free_expr(Expr* ast);
+LiteralExpr* alloc_literal_expr(LiteralExpr ast);
+ExprResult eval_literal_expr(LiteralExpr *);
+void print_literal_expr(LiteralExpr* ast, int indent);
+void free_literal_expr(LiteralExpr* ast);
 
 Stmt* alloc_stmt(Stmt ast);
 void eval_stmt(Stmt* ast);

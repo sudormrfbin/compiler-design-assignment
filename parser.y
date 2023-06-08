@@ -22,7 +22,7 @@ int yylex();
   StrExpr *str_expr;
   ArithExpr *arith_expr;
   BoolExpr *bool_expr;
-  Expr *expr;
+  LiteralExpr *literal_expr;
   Stmt *stmt;
   StatementList *statement_list;
   ElseIfStatement *else_if;
@@ -39,7 +39,7 @@ int yylex();
 %type <arith_expr> aexpr
 %type <bool_expr> bexpr
 %type <ident> iexpr
-%type <expr> expr
+%type <literal_expr> literal-expr
 %type <stmt> stmt display-stmt expr-stmt if-stmt assign-stmt
 %type <statement_list> stmt-list then-clause else-clause
 %type <else_if> else-if-chain
@@ -87,12 +87,12 @@ stmt: expr-stmt
   | assign-stmt
   ;
 
-assign-stmt: IDENT '=' expr eol {
-    $$ = alloc_stmt(AssignStmt($1, $expr));
+assign-stmt: IDENT '=' literal-expr eol {
+    $$ = alloc_stmt(AssignStmt($1, $[literal-expr]));
   }
   ;
 
-display-stmt: DISPLAY expr eol { $$ = alloc_stmt(DisplayStmt($expr)); }
+display-stmt: DISPLAY literal-expr eol { $$ = alloc_stmt(DisplayStmt($[literal-expr])); }
 
 if-stmt: IF bexpr then-clause else-if-chain else-clause ENDIF eol {
     $$ = alloc_stmt(IfStmt($bexpr, $[then-clause], $[else-if-chain], $[else-clause]));
@@ -100,6 +100,7 @@ if-stmt: IF bexpr then-clause else-if-chain else-clause ENDIF eol {
 
 then-clause: THEN eol stmt-list { $$ = $[stmt-list]; }
 
+// TODO: use then-clause here
 else-if-chain: { $$ = NULL; }
   | else-if-chain ELSE IF bexpr THEN eol stmt-list {
     add_else_if(&$1, $bexpr, $[stmt-list]);
@@ -109,12 +110,12 @@ else-if-chain: { $$ = NULL; }
 
 else-clause: ELSE eol stmt-list { $$ = $[stmt-list]; }
 
-expr-stmt: expr eol { $$ = alloc_stmt(ExprStmt($expr)); }
+expr-stmt: literal-expr eol { $$ = alloc_stmt(ExprStmt($[literal-expr])); }
 
-expr: aexpr { $$ = alloc_expr(ArithmeticExpr($1)); }
-  | bexpr { $$ = alloc_expr(BooleanExpr($1)); }
-  | sexpr { $$ = alloc_expr(StringExpr($1)); }
-  | iexpr { $$ = alloc_expr(IdentExpr($1)); }
+literal-expr: aexpr { $$ = alloc_literal_expr(ArithmeticExpr($1)); }
+  | bexpr { $$ = alloc_literal_expr(BooleanExpr($1)); }
+  | sexpr { $$ = alloc_literal_expr(StringExpr($1)); }
+  | iexpr { $$ = alloc_literal_expr(IdentExpr($1)); }
   ;
 
 /* Arithmetic expression */

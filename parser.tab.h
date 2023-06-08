@@ -86,7 +86,7 @@ union YYSTYPE
   StrExpr *str_expr;
   ArithExpr *arith_expr;
   BoolExpr *bool_expr;
-  Expr *expr;
+  LiteralExpr *literal_expr;
   Stmt *stmt;
   StatementList *statement_list;
   ElseIfStatement *else_if;
