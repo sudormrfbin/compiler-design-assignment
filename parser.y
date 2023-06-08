@@ -25,6 +25,7 @@ int yylex();
   Expr *expr;
   Stmt *stmt;
   StatementList *statement_list;
+  ElseIfStatement *else_if;
   double number;
   char* string;
   char* ident;
@@ -41,6 +42,7 @@ int yylex();
 %type <expr> expr
 %type <stmt> stmt display-stmt expr-stmt if-stmt assign-stmt
 %type <statement_list> stmt-list
+%type <else_if> else-if-chain
 
 %token EOL
 %token GT
@@ -101,11 +103,18 @@ assign-stmt: IDENT '=' expr EOL {
   }
   ;
 
-if-stmt: IF bexpr THEN EOL stmt-list ENDIF EOL {
-    $$ = stmt_alloc(IfStmt($bexpr, $[stmt-list], NULL));
+if-stmt: IF bexpr THEN EOL stmt-list else-if-chain ENDIF EOL {
+    $$ = stmt_alloc(IfStmt($bexpr, $[stmt-list], $[else-if-chain], NULL));
   }
-  | IF bexpr THEN EOL stmt-list[true-stmts] ELSE EOL stmt-list[else-stmts] ENDIF EOL {
-    $$ = stmt_alloc(IfStmt($bexpr, $[true-stmts], $[else-stmts]));
+  | IF bexpr THEN EOL stmt-list[true-stmts] else-if-chain ELSE EOL stmt-list[else-stmts] ENDIF EOL {
+    $$ = stmt_alloc(IfStmt($bexpr, $[true-stmts], $[else-if-chain], $[else-stmts]));
+  }
+  ;
+
+else-if-chain: { $$ = NULL; }
+  | else-if-chain ELSE IF bexpr THEN EOL stmt-list {
+    else_if_add(&$1, $bexpr, $[stmt-list]);
+    $$ = $1;
   }
   ;
 

@@ -335,11 +335,14 @@ void eval_stmt(Stmt* stmt) {
     of(AssignStmt, ident, value) {
       symbol_add(&symtab, *ident, eval_expr(*value));
     }
-    of(IfStmt, condition, true_stmts, else_stmts) {
+    of(IfStmt, condition, true_stmts, else_if, else_stmts) {
       if (eval_bexpr(*condition)) {
         eval_stmt_list(*true_stmts);
       } else {
-        eval_stmt_list(*else_stmts);
+        bool else_if_did_exec = eval_else_if(*else_if);
+        if (!else_if_did_exec) {
+          eval_stmt_list(*else_stmts);
+        }
       }
     }
   }
@@ -363,7 +366,7 @@ void print_stmt(Stmt *ast, int ind) {
       print_expr(*value, ind + 1);
       iprintf(ind, ")\n");
     }; 
-    of(IfStmt, condition, true_stmts, else_stmts) {
+    of(IfStmt, condition, true_stmts, else_if, else_stmts) {
       iprintf(ind, "IfStatement(\n");
 
       iprintf(ind + 1, "Condition(\n");
@@ -373,6 +376,10 @@ void print_stmt(Stmt *ast, int ind) {
       iprintf(ind + 1, "TrueStatements(\n");
       print_stmt_list(*true_stmts, ind + 2);
       iprintf(ind + 1, ")\n");
+
+      if (*else_if) {
+        print_else_if(*else_if, ind + 1);
+      }
 
       if (*else_stmts) {
         iprintf(ind + 1, "ElseStatements(\n");
@@ -393,11 +400,74 @@ void ast_free_stmt(Stmt* ast) {
       free(*ident);
       ast_free_expr(*value);
     }
-    of(IfStmt, condition, true_stmts, else_stmts) {
+    of(IfStmt, condition, true_stmts, else_if, else_stmts) {
       ast_free_bexpr(*condition);
       stmt_list_free(*true_stmts);
+      free_else_if(*else_if);
       stmt_list_free(*else_stmts);
     }
+  }
+}
+
+/* -------------------------- ElseIfStatement ------------------------ */
+
+ElseIfStatement* else_if_alloc(Condition* cond, TrueStatements* stmts) {
+  ElseIfStatement* alloc = malloc(sizeof(ElseIfStatement));
+  ensure_non_null(alloc, "out of space");
+  alloc->condition = cond;
+  alloc->true_stmts = stmts;
+  alloc->next = NULL;
+
+  return alloc;
+}
+
+void else_if_add(ElseIfStatement** start, Condition* cond, TrueStatements* stmts) {
+  ElseIfStatement* new = else_if_alloc(cond, stmts);
+
+  if (!(*start)) {
+    *start = new;
+  } else {
+    ElseIfStatement* end = *start;
+    while (end->next) end = end->next;
+    end->next = new;
+  }
+}
+
+bool eval_else_if(ElseIfStatement* stmt) {
+  while (stmt) {
+    if (eval_bexpr(stmt->condition)) {
+      eval_stmt_list(stmt->true_stmts);
+      return true;
+    }
+    stmt = stmt->next;
+  }
+
+  return false;
+}
+
+void free_else_if(ElseIfStatement* stmt) {
+  while (stmt) {
+    ast_free_bexpr(stmt->condition);
+    stmt_list_free(stmt->true_stmts);
+    stmt = stmt->next;
+  }
+}
+
+void print_else_if(ElseIfStatement* stmt, int ind) {
+  while (stmt) {
+    iprintf(ind, "ElseIfStatement(\n");
+
+    iprintf(ind + 1, "Condition(\n");
+    print_bexpr(stmt->condition, ind + 2);
+    iprintf(ind + 1, ")\n");
+
+    iprintf(ind + 1, "TrueStatements(\n");
+    print_stmt_list(stmt->true_stmts, ind + 2);
+    iprintf(ind + 1, ")\n");
+
+    iprintf(ind, ")\n");
+
+    stmt = stmt->next;
   }
 }
 

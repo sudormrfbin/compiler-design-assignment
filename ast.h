@@ -63,13 +63,21 @@ datatype(
 typedef BoolExpr Condition;
 typedef StatementList TrueStatements;
 typedef StatementList ElseStatements;
+typedef struct ElseIfStatement ElseIfStatement;
+
+struct ElseIfStatement {
+  Condition* condition;
+  TrueStatements* true_stmts;
+
+  ElseIfStatement* next;
+};
 
 datatype(
   Stmt,
   (DisplayStmt, Expr*),
   (ExprStmt, Expr*),
   (AssignStmt, char*, Expr*),
-  (IfStmt, Condition*, TrueStatements*, ElseStatements*)
+  (IfStmt, Condition*, TrueStatements*, ElseIfStatement*, ElseStatements*)
 );
 
 struct StatementList {
@@ -116,6 +124,12 @@ Stmt* stmt_alloc(Stmt ast);
 void eval_stmt(Stmt* ast);
 void ast_free_stmt(Stmt* ast);
 void print_stmt(Stmt* ast, int indent);
+
+ElseIfStatement* else_if_alloc(Condition* cond, TrueStatements* stmts);
+void else_if_add(ElseIfStatement** start, Condition* cond, TrueStatements* stmts);
+bool eval_else_if(ElseIfStatement* head);
+void free_else_if(ElseIfStatement* head);
+void print_else_if(ElseIfStatement* ast, int indent);
 
 typedef struct Symbol Symbol;
 typedef Symbol SymbolTable;

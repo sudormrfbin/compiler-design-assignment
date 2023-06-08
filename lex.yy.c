@@ -930,7 +930,7 @@ YY_RULE_SETUP
 case 27:
 YY_RULE_SETUP
 #line 57 "lex.l"
-{ yylval.string = strdup(""); return STRING; }
+{ yylval.string = strdup(""); return STRING; } /* Empty string not being recognized by STRING_STATE, so special case it */
 	YY_BREAK
 case 28:
 YY_RULE_SETUP

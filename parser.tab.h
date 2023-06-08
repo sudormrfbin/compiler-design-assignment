@@ -89,11 +89,12 @@ union YYSTYPE
   Expr *expr;
   Stmt *stmt;
   StatementList *statement_list;
+  ElseIfStatement *else_if;
   double number;
   char* string;
   char* ident;
 
-#line 97 "parser.tab.h"
+#line 98 "parser.tab.h"
 
 };
 typedef union YYSTYPE YYSTYPE;
