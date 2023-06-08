@@ -86,10 +86,10 @@ struct StatementList {
   StatementList* prev; // Remove prev ref
 };
 
-StatementList* stmt_list_alloc();
-void stmt_list_add(StatementList** start, Stmt* stmt);
+StatementList* alloc_stmt_list();
+void add_stmt_list(StatementList** start, Stmt* stmt);
 void eval_stmt_list(StatementList* stmts);
-void stmt_list_free(StatementList* stmts);
+void free_stmt_list(StatementList* stmts);
 void print_stmt_list(StatementList* ast, int indent);
 
 datatype(
@@ -100,36 +100,36 @@ datatype(
 );
 
 // TODO: Rename to alloc_* and free_*
-ArithExpr* aexpr_alloc(ArithExpr ast);
+ArithExpr* alloc_aexpr(ArithExpr ast);
 double eval_aexpr(ArithExpr* ast);
-void ast_free_aexpr(ArithExpr* ast);
 void print_aexpr(ArithExpr* ast, int indent);
+void free_aexpr(ArithExpr* ast);
 
-BoolExpr* bexpr_alloc(BoolExpr ast);
+BoolExpr* alloc_bexpr(BoolExpr ast);
 bool eval_bexpr(BoolExpr* ast);
-void ast_free_bexpr(BoolExpr* ast);
 void print_bexpr(BoolExpr* ast, int indent);
+void free_bexpr(BoolExpr* ast);
 
-StrExpr* sexpr_alloc(StrExpr ast);
+StrExpr* alloc_sexpr(StrExpr ast);
 char* eval_sexpr(StrExpr* ast);
-void ast_free_sexpr(StrExpr* ast);
 void print_sexpr(StrExpr* ast, int indent);
+void free_sexpr(StrExpr* ast);
 
-Expr* expr_alloc(Expr ast);
+Expr* alloc_expr(Expr ast);
 ExprResult eval_expr(Expr *);
-void ast_free_expr(Expr* ast);
 void print_expr(Expr* ast, int indent);
+void free_expr(Expr* ast);
 
-Stmt* stmt_alloc(Stmt ast);
+Stmt* alloc_stmt(Stmt ast);
 void eval_stmt(Stmt* ast);
-void ast_free_stmt(Stmt* ast);
 void print_stmt(Stmt* ast, int indent);
+void free_stmt(Stmt* ast);
 
-ElseIfStatement* else_if_alloc(Condition* cond, TrueStatements* stmts);
-void else_if_add(ElseIfStatement** start, Condition* cond, TrueStatements* stmts);
+ElseIfStatement* alloc_else_if(Condition* cond, TrueStatements* stmts);
+void add_else_if(ElseIfStatement** start, Condition* cond, TrueStatements* stmts);
 bool eval_else_if(ElseIfStatement* head);
-void free_else_if(ElseIfStatement* head);
 void print_else_if(ElseIfStatement* ast, int indent);
+void free_else_if(ElseIfStatement* head);
 
 typedef struct Symbol Symbol;
 typedef Symbol SymbolTable;
@@ -141,7 +141,7 @@ struct Symbol {
   Symbol* next;
 };
 
-void symbol_add(SymbolTable** head, char* name, ExprResult value);
+void add_symbol(SymbolTable** head, char* name, ExprResult value);
 ExprResult* symbol_get(SymbolTable* head, char* name);
 void free_symtab(SymbolTable* head);
 void print_symtab(SymbolTable* head);

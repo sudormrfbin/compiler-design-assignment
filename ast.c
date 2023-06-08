@@ -39,7 +39,7 @@ void unreachable(const char *func_name) {
 /* ----------------------------------------------------------------- */
 
 #define ALLOC_NODE(type, node) \
-    type* node##_alloc(type ast) { \
+    type* alloc_##node(type ast) { \
         type* alloc = malloc(sizeof(ast)); \
         ensure_non_null(alloc, "out of space"); \
         memcpy(alloc, &ast, sizeof(ast)); \
@@ -116,14 +116,14 @@ void print_aexpr(ArithExpr* ast, int ind) {
   ind--;
 }
 
-void ast_free_aexpr(ArithExpr* ast) {
+void free_aexpr(ArithExpr* ast) {
   match(*ast) {
     of(BinaryAExpr, left, _, right) {
-      ast_free_aexpr(*left);
-      ast_free_aexpr(*right);
+      free_aexpr(*left);
+      free_aexpr(*right);
     }
     of(UnaryAExpr, _, right) {
-      ast_free_aexpr(*right);
+      free_aexpr(*right);
     }
     of(Number, _) {}; 
   }
@@ -205,17 +205,17 @@ void print_bexpr(BoolExpr* ast, int ind) {
   }
 }
 
-void ast_free_bexpr(BoolExpr* ast) {
+void free_bexpr(BoolExpr* ast) {
   match (*ast) {
     of(RelationalArithExpr, left, _, right) {
-      ast_free_aexpr(*left);
-      ast_free_aexpr(*right);
+      free_aexpr(*left);
+      free_aexpr(*right);
     }
     of(LogicalBoolExpr, left, _, right) {
-      ast_free_bexpr(*left);
-      ast_free_bexpr(*right);
+      free_bexpr(*left);
+      free_bexpr(*right);
     }
-    of(NegatedBoolExpr, bexpr) ast_free_bexpr(*bexpr);
+    of(NegatedBoolExpr, bexpr) free_bexpr(*bexpr);
     of(Boolean, _) {}
   }
 
@@ -254,11 +254,11 @@ void print_sexpr(StrExpr* ast, int ind) {
   }
 }
 
-void ast_free_sexpr(StrExpr* ast) {
+void free_sexpr(StrExpr* ast) {
   match (*ast) {
     of(StringConcat, first, second) {
-      ast_free_sexpr(*first);
-      ast_free_sexpr(*second);
+      free_sexpr(*first);
+      free_sexpr(*second);
     }
     of(String, str) free(*str);
   }
@@ -308,11 +308,11 @@ void print_expr(Expr* ast, int ind) {
   }
 }
 
-void ast_free_expr(Expr* ast) {
+void free_expr(Expr* ast) {
   match (*ast) {
-    of(BooleanExpr, bexpr) ast_free_bexpr(*bexpr);
-    of(ArithmeticExpr, aexpr) ast_free_aexpr(*aexpr);
-    of(StringExpr, sexpr) ast_free_sexpr(*sexpr);
+    of(BooleanExpr, bexpr) free_bexpr(*bexpr);
+    of(ArithmeticExpr, aexpr) free_aexpr(*aexpr);
+    of(StringExpr, sexpr) free_sexpr(*sexpr);
     of(IdentExpr, ident) free(*ident);
   }
 
@@ -333,7 +333,7 @@ void eval_stmt(Stmt* stmt) {
     }
     of(ExprStmt, expr) eval_expr(*expr); 
     of(AssignStmt, ident, value) {
-      symbol_add(&symtab, *ident, eval_expr(*value));
+      add_symbol(&symtab, *ident, eval_expr(*value));
     }
     of(IfStmt, condition, true_stmts, else_if, else_stmts) {
       if (eval_bexpr(*condition)) {
@@ -392,26 +392,26 @@ void print_stmt(Stmt *ast, int ind) {
   }
 }
 
-void ast_free_stmt(Stmt* ast) {
+void free_stmt(Stmt* ast) {
   match (*ast) {
-    of(DisplayStmt, expr) ast_free_expr(*expr);
-    of(ExprStmt, expr) ast_free_expr(*expr);
+    of(DisplayStmt, expr) free_expr(*expr);
+    of(ExprStmt, expr) free_expr(*expr);
     of(AssignStmt, ident, value) {
       free(*ident);
-      ast_free_expr(*value);
+      free_expr(*value);
     }
     of(IfStmt, condition, true_stmts, else_if, else_stmts) {
-      ast_free_bexpr(*condition);
-      stmt_list_free(*true_stmts);
+      free_bexpr(*condition);
+      free_stmt_list(*true_stmts);
       free_else_if(*else_if);
-      stmt_list_free(*else_stmts);
+      free_stmt_list(*else_stmts);
     }
   }
 }
 
 /* -------------------------- ElseIfStatement ------------------------ */
 
-ElseIfStatement* else_if_alloc(Condition* cond, TrueStatements* stmts) {
+ElseIfStatement* alloc_else_if(Condition* cond, TrueStatements* stmts) {
   ElseIfStatement* alloc = malloc(sizeof(ElseIfStatement));
   ensure_non_null(alloc, "out of space");
   alloc->condition = cond;
@@ -421,8 +421,8 @@ ElseIfStatement* else_if_alloc(Condition* cond, TrueStatements* stmts) {
   return alloc;
 }
 
-void else_if_add(ElseIfStatement** start, Condition* cond, TrueStatements* stmts) {
-  ElseIfStatement* new = else_if_alloc(cond, stmts);
+void add_else_if(ElseIfStatement** start, Condition* cond, TrueStatements* stmts) {
+  ElseIfStatement* new = alloc_else_if(cond, stmts);
 
   if (!(*start)) {
     *start = new;
@@ -447,8 +447,8 @@ bool eval_else_if(ElseIfStatement* stmt) {
 
 void free_else_if(ElseIfStatement* stmt) {
   while (stmt) {
-    ast_free_bexpr(stmt->condition);
-    stmt_list_free(stmt->true_stmts);
+    free_bexpr(stmt->condition);
+    free_stmt_list(stmt->true_stmts);
     stmt = stmt->next;
   }
 }
@@ -473,7 +473,7 @@ void print_else_if(ElseIfStatement* stmt, int ind) {
 
 /* -------------------------- StatementList -------------------------- */
 
-StatementList* stmt_list_alloc() {
+StatementList* alloc_stmt_list() {
   StatementList* alloc = malloc(sizeof(StatementList));
   ensure_non_null(alloc, "out of space");
   alloc->next = NULL;
@@ -483,16 +483,16 @@ StatementList* stmt_list_alloc() {
   return alloc;
 }
 
-void stmt_list_add(StatementList** start, Stmt* stmt) {
+void add_stmt_list(StatementList** start, Stmt* stmt) {
   if (!(*start)) {
-    *start = stmt_list_alloc();
+    *start = alloc_stmt_list();
     (*start)->value = stmt;
     return;
   } else {
     StatementList* end = *start;
     while (end->next) end = end->next;
 
-    StatementList* new = stmt_list_alloc();
+    StatementList* new = alloc_stmt_list();
     new->value = stmt;
     new->prev = end;
     end->next = new;
@@ -519,17 +519,17 @@ void print_stmt_list(StatementList* start, int ind) {
   }
 }
 
-void stmt_list_free(StatementList* start) {
+void free_stmt_list(StatementList* start) {
   StatementList* curr = start;
   while (curr) {
-    ast_free_stmt(curr->value);
+    free_stmt(curr->value);
     curr = curr->next;
   }
 }
 
 /* --------------------------- Symbol table --------------------------- */
 
-Symbol* symbol_alloc(char* name, ExprResult value) {
+Symbol* alloc_symbol(char* name, ExprResult value) {
 
   // TODO: Add commands for printing tokens, ast, 3 address code, symtab
   Symbol* alloc = malloc(sizeof(Symbol));
@@ -540,9 +540,9 @@ Symbol* symbol_alloc(char* name, ExprResult value) {
   return alloc;
 }
 
-void symbol_add(SymbolTable** head, char* name, ExprResult value) {
+void add_symbol(SymbolTable** head, char* name, ExprResult value) {
   if (!(*head)) {
-    *head = symbol_alloc(name, value);
+    *head = alloc_symbol(name, value);
     return;
   } else {
     Symbol* curr = *head;
@@ -556,7 +556,7 @@ void symbol_add(SymbolTable** head, char* name, ExprResult value) {
       end = curr;
     } while ((curr = curr->next));
 
-    Symbol* new = symbol_alloc(name, value);
+    Symbol* new = alloc_symbol(name, value);
     end->next = new;
   }
 }
@@ -623,7 +623,7 @@ int main(int argc, char **argv) {
   yyparse();
   // print_stmt_list(parse_result, 0);
   eval_stmt_list(parse_result);
-  stmt_list_free(parse_result);
+  free_stmt_list(parse_result);
   free_symtab(symtab);
 
   return 0;

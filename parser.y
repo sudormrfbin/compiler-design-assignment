@@ -45,23 +45,11 @@ int yylex();
 %type <else_if> else-if-chain
 
 %token EOL
-%token GT
-%token GTE
-%token LT
-%token LTE
-%token AND
-%token OR
-%token EQEQ
-
-%token TRUE
-%token FALSE
-
+%token GT GTE LT LTE EQEQ
+%token AND OR
+%token TRUE FALSE
 %token DISPLAY
-
-%token IF
-%token THEN
-%token ELSE
-%token ENDIF
+%token IF THEN ELSE ENDIF
 
 /* Explicitly declare precedence instead of implicitly doing it
    through the grammar.
@@ -84,11 +72,11 @@ eol: EOL
 
 stmt-list: stmt {
     StatementList* ptr = NULL;
-    stmt_list_add(&ptr, $stmt);
+    add_stmt_list(&ptr, $stmt);
     $$ = ptr;
   }
   | stmt-list stmt {
-    stmt_list_add(&$1, $2);
+    add_stmt_list(&$1, $2);
     $$ = $1;
   }
   ;
@@ -100,62 +88,62 @@ stmt: expr-stmt
   ;
 
 assign-stmt: IDENT '=' expr eol {
-    $$ = stmt_alloc(AssignStmt($1, $expr));
+    $$ = alloc_stmt(AssignStmt($1, $expr));
   }
   ;
 
 /* TODO: extract out else-stmts */
 if-stmt: IF bexpr THEN eol stmt-list else-if-chain ENDIF eol {
-    $$ = stmt_alloc(IfStmt($bexpr, $[stmt-list], $[else-if-chain], NULL));
+    $$ = alloc_stmt(IfStmt($bexpr, $[stmt-list], $[else-if-chain], NULL));
   }
   | IF bexpr THEN eol stmt-list[true-stmts] else-if-chain ELSE eol stmt-list[else-stmts] ENDIF eol {
-    $$ = stmt_alloc(IfStmt($bexpr, $[true-stmts], $[else-if-chain], $[else-stmts]));
+    $$ = alloc_stmt(IfStmt($bexpr, $[true-stmts], $[else-if-chain], $[else-stmts]));
   }
   ;
 
 else-if-chain: { $$ = NULL; }
   | else-if-chain ELSE IF bexpr THEN eol stmt-list {
-    else_if_add(&$1, $bexpr, $[stmt-list]);
+    add_else_if(&$1, $bexpr, $[stmt-list]);
     $$ = $1;
   }
   ;
 
-display-stmt: DISPLAY expr eol { $$ = stmt_alloc(DisplayStmt($expr)); };
+display-stmt: DISPLAY expr eol { $$ = alloc_stmt(DisplayStmt($expr)); };
 
-expr-stmt: expr eol { $$ = stmt_alloc(ExprStmt($expr)); };
+expr-stmt: expr eol { $$ = alloc_stmt(ExprStmt($expr)); };
 
-expr: aexpr { $$ = expr_alloc(ArithmeticExpr($1)); }
-  | bexpr { $$ = expr_alloc(BooleanExpr($1)); }
-  | sexpr { $$ = expr_alloc(StringExpr($1)); }
-  | iexpr { $$ = expr_alloc(IdentExpr($1)); }
+expr: aexpr { $$ = alloc_expr(ArithmeticExpr($1)); }
+  | bexpr { $$ = alloc_expr(BooleanExpr($1)); }
+  | sexpr { $$ = alloc_expr(StringExpr($1)); }
+  | iexpr { $$ = alloc_expr(IdentExpr($1)); }
   ;
 
 /* Arithmetic expression */
-aexpr: aexpr '+' aexpr { $$ = aexpr_alloc(BinaryAExpr($1, BinaryOp_Add, $3)); }
-  | aexpr '-' aexpr    { $$ = aexpr_alloc(BinaryAExpr($1, BinaryOp_Sub, $3)); }
-  | aexpr '*' aexpr    { $$ = aexpr_alloc(BinaryAExpr($1, BinaryOp_Mul, $3)); }
-  | aexpr '/' aexpr    { $$ = aexpr_alloc(BinaryAExpr($1, BinaryOp_Div, $3)); }
-  | '-' aexpr %prec UMINUS { $$ = aexpr_alloc(UnaryAExpr(UnaryOp_Minus, $2)); }
+aexpr: aexpr '+' aexpr { $$ = alloc_aexpr(BinaryAExpr($1, BinaryOp_Add, $3)); }
+  | aexpr '-' aexpr    { $$ = alloc_aexpr(BinaryAExpr($1, BinaryOp_Sub, $3)); }
+  | aexpr '*' aexpr    { $$ = alloc_aexpr(BinaryAExpr($1, BinaryOp_Mul, $3)); }
+  | aexpr '/' aexpr    { $$ = alloc_aexpr(BinaryAExpr($1, BinaryOp_Div, $3)); }
+  | '-' aexpr %prec UMINUS { $$ = alloc_aexpr(UnaryAExpr(UnaryOp_Minus, $2)); }
   | '(' aexpr ')'      { $$ = $2;                       }
-  | NUMBER             { $$ = aexpr_alloc(Number($1));  }
+  | NUMBER             { $$ = alloc_aexpr(Number($1));  }
   ;
 
 /* Boolean exression */
 bexpr:
-    aexpr EQEQ aexpr { $$ = bexpr_alloc(RelationalArithExpr($1, RelationalEqual, $3)); }
-  | aexpr GT   aexpr { $$ = bexpr_alloc(RelationalArithExpr($1, Greater, $3));         }
-  | aexpr GTE  aexpr { $$ = bexpr_alloc(RelationalArithExpr($1, GreaterOrEqual, $3));  }
-  | aexpr LT   aexpr { $$ = bexpr_alloc(RelationalArithExpr($1, Less, $3));            }
-  | aexpr LTE  aexpr { $$ = bexpr_alloc(RelationalArithExpr($1, LessOrEqual, $3));     }
-  | bexpr AND  bexpr { $$ = bexpr_alloc(LogicalBoolExpr($1, And, $3));                 }
-  | bexpr OR   bexpr { $$ = bexpr_alloc(LogicalBoolExpr($1, Or, $3));                  }
-  | bexpr EQEQ bexpr { $$ = bexpr_alloc(LogicalBoolExpr($1, LogicalEqual, $3));        }
-  | '!' bexpr { $$ = bexpr_alloc(NegatedBoolExpr($2)); }
-  | TRUE      { $$ = bexpr_alloc(Boolean(true));       }
-  | FALSE     { $$ = bexpr_alloc(Boolean(false));      }
+    aexpr EQEQ aexpr { $$ = alloc_bexpr(RelationalArithExpr($1, RelationalEqual, $3)); }
+  | aexpr GT   aexpr { $$ = alloc_bexpr(RelationalArithExpr($1, Greater, $3));         }
+  | aexpr GTE  aexpr { $$ = alloc_bexpr(RelationalArithExpr($1, GreaterOrEqual, $3));  }
+  | aexpr LT   aexpr { $$ = alloc_bexpr(RelationalArithExpr($1, Less, $3));            }
+  | aexpr LTE  aexpr { $$ = alloc_bexpr(RelationalArithExpr($1, LessOrEqual, $3));     }
+  | bexpr AND  bexpr { $$ = alloc_bexpr(LogicalBoolExpr($1, And, $3));                 }
+  | bexpr OR   bexpr { $$ = alloc_bexpr(LogicalBoolExpr($1, Or, $3));                  }
+  | bexpr EQEQ bexpr { $$ = alloc_bexpr(LogicalBoolExpr($1, LogicalEqual, $3));        }
+  | '!' bexpr { $$ = alloc_bexpr(NegatedBoolExpr($2)); }
+  | TRUE      { $$ = alloc_bexpr(Boolean(true));       }
+  | FALSE     { $$ = alloc_bexpr(Boolean(false));      }
 
-sexpr: STRING { $$ = sexpr_alloc(String($1)); }
-  | sexpr '+' sexpr { $$ = sexpr_alloc(StringConcat($1, $3)); }
+sexpr: STRING { $$ = alloc_sexpr(String($1)); }
+  | sexpr '+' sexpr { $$ = alloc_sexpr(StringConcat($1, $3)); }
   /* TODO: Add == */
   ;
 

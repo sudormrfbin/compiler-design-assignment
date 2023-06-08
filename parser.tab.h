@@ -62,9 +62,9 @@ extern int yydebug;
     GTE = 263,                     /* GTE  */
     LT = 264,                      /* LT  */
     LTE = 265,                     /* LTE  */
-    AND = 266,                     /* AND  */
-    OR = 267,                      /* OR  */
-    EQEQ = 268,                    /* EQEQ  */
+    EQEQ = 266,                    /* EQEQ  */
+    AND = 267,                     /* AND  */
+    OR = 268,                      /* OR  */
     TRUE = 269,                    /* TRUE  */
     FALSE = 270,                   /* FALSE  */
     DISPLAY = 271,                 /* DISPLAY  */
