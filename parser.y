@@ -41,7 +41,7 @@ int yylex();
 %type <ident> iexpr
 %type <expr> expr
 %type <stmt> stmt display-stmt expr-stmt if-stmt assign-stmt
-%type <statement_list> stmt-list
+%type <statement_list> stmt-list then-clause else-clause
 %type <else_if> else-if-chain
 
 %token EOL
@@ -92,14 +92,13 @@ assign-stmt: IDENT '=' expr eol {
   }
   ;
 
-/* TODO: extract out else-stmts */
-if-stmt: IF bexpr THEN eol stmt-list else-if-chain ENDIF eol {
-    $$ = alloc_stmt(IfStmt($bexpr, $[stmt-list], $[else-if-chain], NULL));
+display-stmt: DISPLAY expr eol { $$ = alloc_stmt(DisplayStmt($expr)); }
+
+if-stmt: IF bexpr then-clause else-if-chain else-clause ENDIF eol {
+    $$ = alloc_stmt(IfStmt($bexpr, $[then-clause], $[else-if-chain], $[else-clause]));
   }
-  | IF bexpr THEN eol stmt-list[true-stmts] else-if-chain ELSE eol stmt-list[else-stmts] ENDIF eol {
-    $$ = alloc_stmt(IfStmt($bexpr, $[true-stmts], $[else-if-chain], $[else-stmts]));
-  }
-  ;
+
+then-clause: THEN eol stmt-list { $$ = $[stmt-list]; }
 
 else-if-chain: { $$ = NULL; }
   | else-if-chain ELSE IF bexpr THEN eol stmt-list {
@@ -108,9 +107,9 @@ else-if-chain: { $$ = NULL; }
   }
   ;
 
-display-stmt: DISPLAY expr eol { $$ = alloc_stmt(DisplayStmt($expr)); };
+else-clause: ELSE eol stmt-list { $$ = $[stmt-list]; }
 
-expr-stmt: expr eol { $$ = alloc_stmt(ExprStmt($expr)); };
+expr-stmt: expr eol { $$ = alloc_stmt(ExprStmt($expr)); }
 
 expr: aexpr { $$ = alloc_expr(ArithmeticExpr($1)); }
   | bexpr { $$ = alloc_expr(BooleanExpr($1)); }
@@ -148,6 +147,5 @@ sexpr: STRING { $$ = alloc_sexpr(String($1)); }
   ;
 
 iexpr: IDENT
-  ;
 
 %%
