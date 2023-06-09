@@ -24,6 +24,23 @@ void iprintf(int indent, const char *s, ...) {
   vprintf(s, ap);
 }
 
+char* concat_str(char* left, char* right) {
+  int size = strlen(left) + strlen(right) + 1;
+  char* new = malloc(size);
+  snprintf(new, size, "%s%s", left, right);
+  return new;
+}
+
+void runtime_error(const char *s, ...) {
+  va_list ap;
+  va_start(ap, s);
+
+  fprintf(stderr, "runtime error: ");
+  vfprintf(stderr, s, ap);
+  fprintf(stderr, "\n");
+  exit(1);
+}
+
 void ensure_non_null(void *ptr, char *msg) {
   if (!ptr) {
     fprintf(stderr, "%s", msg);
@@ -50,6 +67,8 @@ ALLOC_NODE(ArithExpr, aexpr)
 ALLOC_NODE(BoolExpr, bexpr)
 ALLOC_NODE(StrExpr, sexpr)
 ALLOC_NODE(LiteralExpr, literal_expr)
+ALLOC_NODE(IdentExpr, ident_expr)
+ALLOC_NODE(Expr, expr)
 ALLOC_NODE(Stmt, stmt)
 
 /* ------------------------ ArithmeticExpression ------------------------ */
@@ -229,11 +248,7 @@ char* eval_sexpr(StrExpr* ast) {
     of(StringConcat, first, second) {
       char* left = eval_sexpr(*first);
       char* right = eval_sexpr(*second);
-
-      int size = strlen(left) + strlen(right) + 1;
-      char* new = malloc(size);
-      snprintf(new, size, "%s%s", left, right);
-      return new;
+      return concat_str(left, right);
     }
     of(String, str) return *str;
   }
@@ -264,21 +279,13 @@ void free_sexpr(StrExpr* ast) {
   }
 }
 
-/* ----------------------------- Expression ----------------------------- */
+/* ----------------------------- LiteralExpression ----------------------------- */
 
 ExprResult eval_literal_expr(LiteralExpr* expr) {
   match (*expr) {
     of(BooleanExpr, bexpr) return BooleanResult(eval_bexpr(*bexpr));
     of(ArithmeticExpr, aexpr) return NumberResult(eval_aexpr(*aexpr));
     of(StringExpr, sexpr) return StringResult(eval_sexpr(*sexpr));
-    of(IdentExpr, ident) {
-      ExprResult* value = symbol_get(symtab, *ident);
-      if (!value) {
-        fprintf(stderr, "Runtime error: undefined variable '%s'\n", *ident);
-        exit(1);
-      }
-      return *value;
-    }
   }
 
   unreachable("eval_literal_expr");
@@ -302,9 +309,6 @@ void print_literal_expr(LiteralExpr* ast, int ind) {
       print_sexpr(*sexpr, ind + 1);
       iprintf(ind, ")\n");
     }
-    of(IdentExpr, ident) {
-      iprintf(ind, "Variable(\"%s\")\n", *ident);
-    }
   }
 }
 
@@ -313,10 +317,192 @@ void free_literal_expr(LiteralExpr* ast) {
     of(BooleanExpr, bexpr) free_bexpr(*bexpr);
     of(ArithmeticExpr, aexpr) free_aexpr(*aexpr);
     of(StringExpr, sexpr) free_sexpr(*sexpr);
-    of(IdentExpr, ident) free(*ident);
   }
 
   free(ast);
+}
+
+/* ------------------------ IdentifierExpression ------------------------ */
+
+ExprResult eval_binary_ident_expr(char* ident, IdentBinaryOp op, LiteralExpr* expr) {
+  ExprResult lhs = symbol_get(symtab, ident);
+  ExprResult rhs = eval_literal_expr(expr);
+
+  match (lhs) {
+    of(BooleanResult, bool1) {
+      match (rhs) {
+        of(BooleanResult, bool2) {
+          switch (op) {
+            case IdentBOp_EqEq: return BooleanResult(*bool1 == *bool2);
+            case IdentBOp_And: return BooleanResult(*bool1 && *bool2);
+            case IdentBOp_Or: return BooleanResult(*bool1 || *bool2);
+            default: runtime_error("unsupported boolean operation");
+          }
+        }
+        otherwise {
+          switch (op) {
+            case IdentBOp_EqEq: return BooleanResult(false);
+            default: runtime_error("unsupported boolean operation");
+          }
+        }
+      }
+    }
+    of(StringResult, str1) {
+      match (rhs) {
+        of(StringResult, str2) {
+          switch (op) {
+            case IdentBOp_Plus: return StringResult(concat_str(*str1, *str2));
+            case IdentBOp_EqEq: return BooleanResult(strcmp(*str1, *str2));
+            default: runtime_error("unsupported string operation");
+          }
+        }
+        otherwise {
+          switch (op) {
+            case IdentBOp_EqEq: return BooleanResult(false);
+            default: runtime_error("unsupported string operation");
+          }
+        }
+      }
+    }
+    of(NumberResult, num1) {
+      match (rhs) {
+        of(NumberResult, num2) {
+          switch (op) {
+            case IdentBOp_Plus: return NumberResult(*num1 + *num2);
+            case IdentBOp_Minus: return NumberResult(*num1 - *num2);
+            case IdentBOp_Star: return NumberResult(*num1 * *num2);
+            case IdentBOp_Slash: return NumberResult(*num1 / *num2);
+
+            case IdentBOp_Gt: return BooleanResult(*num1 > *num2);
+            case IdentBOp_Gte: return BooleanResult(*num1 >= *num2);
+            case IdentBOp_Lt: return BooleanResult(*num1 < *num2);
+            case IdentBOp_Lte: return BooleanResult(*num1 <= *num2);
+            case IdentBOp_EqEq: return BooleanResult(*num1 == *num2);
+            default: runtime_error("unsupported number operation");
+          }
+        }
+        otherwise {
+          switch (op) {
+            case IdentBOp_EqEq: return BooleanResult(false);
+            default: runtime_error("unsupported number operation");
+          }
+        }
+      }
+    }
+  }
+  unreachable("eval_binary_ident_expr");
+  return BooleanResult(false);
+}
+
+ExprResult eval_ident_expr(IdentExpr* expr) {
+  match (*expr) {
+    of(IdentBinaryExpr, ident, op, expr) return eval_binary_ident_expr(*ident, *op, *expr);
+    of(IdentUnaryExpr, op, ident) {
+      ExprResult value = symbol_get(symtab, *ident);
+      switch (*op) {
+        case IdentUOp_Minus: {
+          match (value) {
+            of(NumberResult, num) return NumberResult(- (*num));
+            otherwise runtime_error("unsupported variable type for number negation");
+          }
+          break;
+        }
+        case IdentUOp_Exclamation:
+          match (value) {
+            of(BooleanResult, boolean) return BooleanResult(!boolean);
+            otherwise runtime_error("unsupported variable type for boolean negation");
+          }
+          break;
+      }
+    }
+    of(Identifier, ident) return symbol_get(symtab, *ident);
+  }
+
+  unreachable("eval_ident_expr");
+  return BooleanResult(false);
+}
+
+void print_ident_expr(IdentExpr* ast, int ind) {
+  match (*ast) {
+    of(IdentBinaryExpr, ident, op, expr) {
+      iprintf(ind, "BinaryExpression(\n");
+      ind++;
+      iprintf(ind, "Variable(\"%s\")\n", *ident);
+
+      iprintf(ind, "Op(");
+      switch (*op) {
+        case IdentBOp_Plus:  printf("+");  break;
+        case IdentBOp_Minus: printf("-");  break;
+        case IdentBOp_Star:  printf("*");  break;
+        case IdentBOp_Slash: printf("/");  break;
+        case IdentBOp_And:   printf("&&"); break;
+        case IdentBOp_Or:    printf("||"); break;
+        case IdentBOp_EqEq:  printf("=="); break;
+        case IdentBOp_Gt:    printf(">");  break;
+        case IdentBOp_Gte:   printf(">="); break;
+        case IdentBOp_Lt:    printf("<");  break;
+        case IdentBOp_Lte:   printf("<="); break;
+      }
+      printf(")\n");
+
+      print_literal_expr(*expr, ind);
+      ind--;
+      iprintf(ind, ")\n");
+    }
+    of(IdentUnaryExpr, op, ident) {
+      iprintf(ind, "UnaryExpression(\n");
+      ind++;
+
+      iprintf(ind, "Op(");
+      switch (*op) {
+        case IdentUOp_Minus: printf("-"); break;
+        case IdentUOp_Exclamation: printf("!"); break;
+      }
+      printf(")\n");
+
+      iprintf(ind, "Variable(\"%s\")\n", *ident);
+      ind--;
+      iprintf(ind, ")\n");
+    }
+    of(Identifier, ident) iprintf(ind, "Variable(\"%s\")\n", *ident);
+  }
+}
+
+void free_ident_expr(IdentExpr* ast) {
+  match (*ast) {
+    of(IdentBinaryExpr, ident, _, expr) {
+      free(*ident);
+      free_literal_expr(*expr);
+    }
+    of(IdentUnaryExpr, _, ident) free(*ident);
+    of(Identifier, ident) free(*ident);
+  }
+}
+
+/* ----------------------------- Expression ----------------------------- */
+
+ExprResult eval_expr(Expr* expr) {
+  match (*expr) {
+    of(LiteralExpression, lexpr) return eval_literal_expr(*lexpr);
+    of(IdentExpression, iexpr) return eval_ident_expr(*iexpr);
+  }
+
+  unreachable("eval_expr");
+  return BooleanResult(false);
+}
+
+void print_expr(Expr* ast, int ind) {
+  match (*ast) {
+    of(LiteralExpression, lexpr) print_literal_expr(*lexpr, ind);
+    of(IdentExpression, iexpr) print_ident_expr(*iexpr, ind);
+  }
+}
+
+void free_expr(Expr* ast) {
+  match (*ast) {
+    of(LiteralExpression, lexpr) free_literal_expr(*lexpr);
+    of(IdentExpression, iexpr) free_ident_expr(*iexpr);
+  }
 }
 
 /* ----------------------------- Statement ----------------------------- */
@@ -324,16 +510,16 @@ void free_literal_expr(LiteralExpr* ast) {
 void eval_stmt(Stmt* stmt) {
   match (*stmt) {
     of(DisplayStmt, expr) {
-      ExprResult result = eval_literal_expr(*expr);
+      ExprResult result = eval_expr(*expr);
       match(result) {
         of(BooleanResult, boolean) printf("%s\n", *boolean ? "true" : "false");
         of(NumberResult, number) printf("%g\n", *number);
         of(StringResult, string) printf("%s\n", *string);
       }
     }
-    of(ExprStmt, expr) eval_literal_expr(*expr); 
+    of(ExprStmt, expr) eval_expr(*expr); 
     of(AssignStmt, ident, value) {
-      add_symbol(&symtab, *ident, eval_literal_expr(*value));
+      add_symbol(&symtab, *ident, eval_expr(*value));
     }
     of(IfStmt, condition, true_stmts, else_if, else_stmts) {
       if (eval_bexpr(*condition)) {
@@ -352,18 +538,18 @@ void print_stmt(Stmt *ast, int ind) {
   match (*ast) {
     of(DisplayStmt, expr) {
       iprintf(ind, "DisplayStatement(\n");
-      print_literal_expr(*expr, ind + 1);
+      print_expr(*expr, ind + 1);
       iprintf(ind, ")\n");
     }
     of(ExprStmt, expr) {
       iprintf(ind, "ExpressionStatement(\n");
-      print_literal_expr(*expr, ind + 1);
+      print_expr(*expr, ind + 1);
       iprintf(ind, ")\n");
     }; 
     of(AssignStmt, ident, value) {
       iprintf(ind, "AssignmentStatement(\n");
       iprintf(ind + 1, "Ident(%s)", *ident);
-      print_literal_expr(*value, ind + 1);
+      print_expr(*value, ind + 1);
       iprintf(ind, ")\n");
     }; 
     of(IfStmt, condition, true_stmts, else_if, else_stmts) {
@@ -394,11 +580,11 @@ void print_stmt(Stmt *ast, int ind) {
 
 void free_stmt(Stmt* ast) {
   match (*ast) {
-    of(DisplayStmt, expr) free_literal_expr(*expr);
-    of(ExprStmt, expr) free_literal_expr(*expr);
+    of(DisplayStmt, expr) free_expr(*expr);
+    of(ExprStmt, expr) free_expr(*expr);
     of(AssignStmt, ident, value) {
       free(*ident);
-      free_literal_expr(*value);
+      free_expr(*value);
     }
     of(IfStmt, condition, true_stmts, else_if, else_stmts) {
       free_bexpr(*condition);
@@ -561,17 +747,18 @@ void add_symbol(SymbolTable** head, char* name, ExprResult value) {
   }
 }
 
-ExprResult* symbol_get(SymbolTable* head, char* name) {
+ExprResult symbol_get(SymbolTable* head, char* name) {
   Symbol* curr = head;
 
   while (curr) {
     if (strcmp(curr->name, name) == 0) {
-      return &(curr->value);
+      return curr->value;
     }
     curr = curr->next;
   }
 
-  return NULL;
+  fprintf(stderr, "Runtime error: undefined variable '%s'\n", name);
+  exit(1);
 }
 
 void print_symtab(SymbolTable* head) {

@@ -87,6 +87,10 @@ union YYSTYPE
   ArithExpr *arith_expr;
   BoolExpr *bool_expr;
   LiteralExpr *literal_expr;
+  IdentBinaryOp ident_bop;
+  IdentUnaryOp ident_uop;
+  IdentExpr *ident_expr;
+  Expr *expr;
   Stmt *stmt;
   StatementList *statement_list;
   ElseIfStatement *else_if;
@@ -94,7 +98,7 @@ union YYSTYPE
   char* string;
   char* ident;
 
-#line 98 "parser.tab.h"
+#line 102 "parser.tab.h"
 
 };
 typedef union YYSTYPE YYSTYPE;

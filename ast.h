@@ -31,6 +31,27 @@ typedef enum {
   LogicalEqual,
 } LogicalOp;
 
+typedef enum {
+  IdentBOp_Plus,
+  IdentBOp_Minus,
+  IdentBOp_Star,
+  IdentBOp_Slash,
+
+  IdentBOp_Gt,
+  IdentBOp_Gte,
+  IdentBOp_Lt,
+  IdentBOp_Lte,
+  IdentBOp_EqEq,
+
+  IdentBOp_And,
+  IdentBOp_Or,
+} IdentBinaryOp;
+
+typedef enum {
+  IdentUOp_Minus,
+  IdentUOp_Exclamation,
+} IdentUnaryOp;
+
 datatype(
   ArithExpr,
   (BinaryAExpr, ArithExpr *, BinaryOp, ArithExpr *),
@@ -56,8 +77,20 @@ datatype(
   LiteralExpr,
   (BooleanExpr, BoolExpr *),
   (ArithmeticExpr, ArithExpr *),
-  (StringExpr, StrExpr *),
-  (IdentExpr, char*)
+  (StringExpr, StrExpr *)
+);
+
+datatype(
+  IdentExpr,
+  (IdentBinaryExpr, char*, IdentBinaryOp, LiteralExpr*),
+  (IdentUnaryExpr, IdentUnaryOp, char*),
+  (Identifier, char*)
+);
+
+datatype(
+  Expr,
+  (LiteralExpression, LiteralExpr*),
+  (IdentExpression, IdentExpr*)
 );
 
 typedef BoolExpr Condition;
@@ -74,9 +107,9 @@ struct ElseIfStatement {
 
 datatype(
   Stmt,
-  (DisplayStmt, LiteralExpr*),
-  (ExprStmt, LiteralExpr*),
-  (AssignStmt, char*, LiteralExpr*),
+  (DisplayStmt, Expr*),
+  (ExprStmt, Expr*),
+  (AssignStmt, char*, Expr*),
   (IfStmt, Condition*, TrueStatements*, ElseIfStatement*, ElseStatements*)
 );
 
@@ -120,6 +153,16 @@ ExprResult eval_literal_expr(LiteralExpr *);
 void print_literal_expr(LiteralExpr* ast, int indent);
 void free_literal_expr(LiteralExpr* ast);
 
+IdentExpr* alloc_ident_expr(IdentExpr ast);
+ExprResult eval_ident_expr(IdentExpr *);
+void print_ident_expr(IdentExpr* ast, int indent);
+void free_ident_expr(IdentExpr* ast);
+
+Expr* alloc_expr(Expr ast);
+ExprResult eval_expr(Expr *);
+void print_expr(Expr* ast, int indent);
+void free_expr(Expr* ast);
+
 Stmt* alloc_stmt(Stmt ast);
 void eval_stmt(Stmt* ast);
 void print_stmt(Stmt* ast, int indent);
@@ -142,6 +185,6 @@ struct Symbol {
 };
 
 void add_symbol(SymbolTable** head, char* name, ExprResult value);
-ExprResult* symbol_get(SymbolTable* head, char* name);
+ExprResult symbol_get(SymbolTable* head, char* name);
 void free_symtab(SymbolTable* head);
 void print_symtab(SymbolTable* head);
