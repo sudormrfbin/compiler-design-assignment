@@ -5,6 +5,7 @@
 #include "ast.h"
 #include "datatype99.h"
 #include "parser.tab.h"
+#include "argparse.h"
 
 extern SymbolTable* symtab;
 extern FILE* yyin;
@@ -265,7 +266,7 @@ void print_sexpr(StrExpr* ast, int ind) {
       print_sexpr(*second, ind + 1);
       iprintf(ind, ")\n");
     }
-    of(String, str) iprintf(ind, "String(\"%s\")", *str);
+    of(String, str) iprintf(ind, "String(\"%s\")\n", *str);
   }
 }
 
@@ -828,23 +829,65 @@ void yyerror(const char *s, ...) {
   fprintf(stderr, "\n");
 }
 
-int main(int argc, char **argv) {
-  // If a file is given as command line argument, set input
-  // to file contents.
-  if (argc > 1) {
-    if (!(yyin = fopen(argv[1], "r"))) {
-      perror(argv[1]);
+int main(int argc, const char **argv) {
+  static const char *const usages[] = {
+      "psuedoc [options] filename",
+      NULL,
+  };
+
+  int tokens = false;
+  int ast = false;
+  int show_symtab = false;
+
+  // TODO: Add command for 3 address code
+  struct argparse_option options[] = {
+    OPT_HELP(),
+    OPT_BOOLEAN('t', "tokens", &tokens, "print token stream", NULL, 0, 0),
+    OPT_BOOLEAN('a', "ast", &ast, "print syntax tree", NULL, 0, 0),
+    OPT_BOOLEAN('s', "symtab", &show_symtab, "print symbol table", NULL, 0, 0),
+    OPT_END(),
+  };
+
+  struct argparse argparse;
+  argparse_init(&argparse, options, usages, 0);
+  // argparse_describe(&argparse, "\nA brief description of what the program does and how it works.", "\nAdditional description of the program after the description of the arguments.");
+  argc = argparse_parse(&argparse, argc, argv);
+
+  if (argc == 0) {
+    fprintf(stderr, "filename is required\n");
+    exit(1);
+  } else {
+    if (!(yyin = fopen(*argv, "r"))) {
+      perror("could not open file");
       return 1;
     }
   }
 
-  // TODO: Add commands for printing tokens, ast, 3 address code, symtab
+  if (tokens != 0) {
+    printf("Token printing not yet implemented\n");
+    exit(1);
+  }
 
-  yyparse();
-  // print_stmt_list(parse_result, 0);
-  eval_stmt_list(parse_result);
-  free_stmt_list(parse_result);
-  free_symtab(symtab);
+  if (ast != 0) {
+    yyparse();
+    print_stmt_list(parse_result, 0);
+    free_stmt_list(parse_result);
+  }
+
+  if (show_symtab != 0) {
+    yyparse();
+    eval_stmt_list(parse_result);
+    print_symtab(symtab);
+    free_stmt_list(parse_result);
+    free_symtab(symtab);
+  }
+
+  if (!(tokens || ast || show_symtab)) {
+    yyparse();
+    eval_stmt_list(parse_result);
+    free_stmt_list(parse_result);
+    free_symtab(symtab);
+  }
 
   return 0;
 }
