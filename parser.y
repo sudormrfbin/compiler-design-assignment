@@ -104,15 +104,16 @@ if-stmt: IF expr then-clause else-if-chain else-clause ENDIF eol {
 
 then-clause: THEN eol stmt-list { $$ = $[stmt-list]; }
 
-// TODO: use then-clause here
-else-if-chain: { $$ = NULL; }
-  | else-if-chain ELSE IF expr THEN eol stmt-list {
-    add_else_if(&$1, $expr, $[stmt-list]);
+else-if-chain: %empty { $$ = NULL; }
+  | else-if-chain ELSE IF expr then-clause {
+    add_else_if(&$1, $expr, $[then-clause]);
     $$ = $1;
   }
   ;
 
-else-clause: ELSE eol stmt-list { $$ = $[stmt-list]; }
+else-clause: %empty { $$ = NULL; }
+  | ELSE eol stmt-list { $$ = $[stmt-list]; }
+  ;
 
 expr-stmt: expr eol { $$ = alloc_stmt(ExprStmt($expr)); }
 
