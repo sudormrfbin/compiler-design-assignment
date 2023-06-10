@@ -293,16 +293,16 @@ ExprResult eval_literal_expr(LiteralExpr* expr) {
 void print_literal_expr(LiteralExpr* ast, int ind) {
   match (*ast) {
     of(BooleanExpr, bexpr) {
-      iprintf(ind, "BooleanExpression\n");
-      print_bexpr(*bexpr, ind + 1);
+      // iprintf(ind, "BooleanExpression\n");
+      print_bexpr(*bexpr, ind);
     }
     of(ArithmeticExpr, aexpr) {
-      iprintf(ind, "ArithmeticExpression\n");
-      print_aexpr(*aexpr, ind + 1);
+      // iprintf(ind, "ArithmeticExpression\n");
+      print_aexpr(*aexpr, ind);
     }
     of(StringExpr, sexpr) {
-      iprintf(ind, "StringExpression\n");
-      print_sexpr(*sexpr, ind + 1);
+      // iprintf(ind, "StringExpression\n");
+      print_sexpr(*sexpr, ind);
     }
   }
 }
@@ -555,7 +555,7 @@ void print_stmt(Stmt *ast, int ind) {
     }; 
     of(AssignStmt, ident, value) {
       iprintf(ind, "AssignmentStatement\n");
-      iprintf(ind + 1, "Ident(%s)", *ident);
+      iprintf(ind + 1, "Variable(\"%s\")\n", *ident);
       print_expr(*value, ind + 1);
     }; 
     of(IfStmt, condition, true_stmts, else_if, else_stmts) {
@@ -707,8 +707,8 @@ void eval_stmt_list(StatementList* start) {
 void print_stmt_list(StatementList* start, int ind) {
   StatementList* curr = start;
   while (curr) {
-    iprintf(ind, "Statement\n");
-    print_stmt(curr->value, ind + 1);
+    // iprintf(ind, "Statement\n");
+    print_stmt(curr->value, ind);
 
     curr = curr->next;
   }
