@@ -542,6 +542,11 @@ void eval_stmt(Stmt* stmt) {
         }
       }
     }
+    of(WhileStmt, condition, true_stmts) {
+      while (eval_to_condition(*condition)) {
+        eval_stmt_list(*true_stmts);
+      }
+    }
   }
 }
 
@@ -586,6 +591,19 @@ void print_stmt(Stmt *ast, int ind) {
 
       iprintf(ind, ")\n");
     }
+    of(WhileStmt, condition, true_stmts) {
+      iprintf(ind, "WhileStatement(\n");
+
+      iprintf(ind + 1, "Condition(\n");
+      print_expr(*condition, ind + 2);
+      iprintf(ind + 1, ")\n");
+
+      iprintf(ind + 1, "TrueStatements(\n");
+      print_stmt_list(*true_stmts, ind + 2);
+      iprintf(ind + 1, ")\n");
+
+      iprintf(ind, ")\n");
+    }
   }
 }
 
@@ -602,6 +620,10 @@ void free_stmt(Stmt* ast) {
       free_stmt_list(*true_stmts);
       free_else_if(*else_if);
       free_stmt_list(*else_stmts);
+    }
+    of(WhileStmt, condition, true_stmts) {
+      free_expr(*condition);
+      free_stmt_list(*true_stmts);
     }
   }
 }

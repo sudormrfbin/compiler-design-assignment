@@ -44,6 +44,10 @@ we disable this functionality using noyywrap.
 "else"  { return ELSE;  }
 "endif" { return ENDIF; }
 
+"while"    { return WHILE;    }
+"do"       { return DO;       }
+"endwhile" { return ENDWHILE; }
+
 \n      { return EOL; }
 
 [ \t]   { } /* ignore whitespace */

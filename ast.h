@@ -114,7 +114,8 @@ datatype(
   (DisplayStmt, Expr*),
   (ExprStmt, Expr*),
   (AssignStmt, char*, Expr*),
-  (IfStmt, Condition*, TrueStatements*, ElseIfStatement*, ElseStatements*)
+  (IfStmt, Condition*, TrueStatements*, ElseIfStatement*, ElseStatements*),
+  (WhileStmt, Condition*, TrueStatements*)
 );
 
 struct StatementList {

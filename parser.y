@@ -47,7 +47,7 @@ int yylex();
 %type <ident_bop> ident-binary-op
 %type <ident_uop> ident-unary-op
 %type <expr> expr
-%type <stmt> stmt display-stmt expr-stmt if-stmt assign-stmt
+%type <stmt> stmt display-stmt expr-stmt if-stmt assign-stmt while-stmt
 %type <statement_list> stmt-list then-clause else-clause
 %type <else_if> else-if-chain
 
@@ -57,6 +57,7 @@ int yylex();
 %token TRUE FALSE
 %token DISPLAY
 %token IF THEN ELSE ENDIF
+%token WHILE DO ENDWHILE
 
 /* Explicitly declare precedence instead of implicitly doing it
    through the grammar.
@@ -91,6 +92,7 @@ stmt-list: stmt {
 stmt: expr-stmt
   | display-stmt
   | if-stmt
+  | while-stmt
   | assign-stmt
   ;
 
@@ -114,6 +116,10 @@ else-if-chain: %empty { $$ = NULL; }
 else-clause: %empty { $$ = NULL; }
   | ELSE eol stmt-list { $$ = $[stmt-list]; }
   ;
+
+while-stmt: WHILE expr DO eol stmt-list ENDWHILE eol {
+  $$ = alloc_stmt(WhileStmt($expr, $[stmt-list]));
+}
 
 expr-stmt: expr eol { $$ = alloc_stmt(ExprStmt($expr)); }
 

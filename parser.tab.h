@@ -72,7 +72,10 @@ extern int yydebug;
     THEN = 273,                    /* THEN  */
     ELSE = 274,                    /* ELSE  */
     ENDIF = 275,                   /* ENDIF  */
-    UMINUS = 276                   /* UMINUS  */
+    WHILE = 276,                   /* WHILE  */
+    DO = 277,                      /* DO  */
+    ENDWHILE = 278,                /* ENDWHILE  */
+    UMINUS = 279                   /* UMINUS  */
   };
   typedef enum yytokentype yytoken_kind_t;
 #endif
@@ -98,7 +101,7 @@ union YYSTYPE
   char* string;
   char* ident;
 
-#line 102 "parser.tab.h"
+#line 105 "parser.tab.h"
 
 };
 typedef union YYSTYPE YYSTYPE;
