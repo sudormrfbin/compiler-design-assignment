@@ -72,11 +72,9 @@ int yylex();
 
 program: stmt-list { parse_result = $1; }
   | eol stmt-list  { parse_result = $2; }
-  ;
 
 eol: EOL
   | eol EOL
-  ;
 
 stmt-list: stmt {
     StatementList* ptr = NULL;
@@ -87,14 +85,12 @@ stmt-list: stmt {
     add_stmt_list(&$1, $2);
     $$ = $1;
   }
-  ;
 
 stmt: expr-stmt
   | display-stmt
   | if-stmt
   | while-stmt
   | assign-stmt
-  ;
 
 assign-stmt: IDENT '=' expr eol { $$ = alloc_stmt(AssignStmt($1, $expr)); }
 
@@ -111,11 +107,9 @@ else-if-chain: %empty { $$ = NULL; }
     add_else_if(&$1, $expr, $[then-clause]);
     $$ = $1;
   }
-  ;
 
 else-clause: %empty { $$ = NULL; }
   | ELSE eol stmt-list { $$ = $[stmt-list]; }
-  ;
 
 while-stmt: WHILE expr DO eol stmt-list ENDWHILE eol {
   $$ = alloc_stmt(WhileStmt($expr, $[stmt-list]));
@@ -134,27 +128,22 @@ ident-binary-op: '+' { $$ = IdentBOp_Plus; }
   | EQEQ { $$ = IdentBOp_EqEq;  }
   | AND  { $$ = IdentBOp_And;   }
   | OR   { $$ = IdentBOp_Or;    }
-  ;
 
 ident-unary-op: '!' { $$ = IdentUOp_Exclamation; }
   | '-' { $$ = IdentUOp_Minus; }
-  ;
 
 expr: literal-expr { $$ = alloc_expr(LiteralExpression($1)); }
   | ident-expr { $$ = alloc_expr(IdentExpression($1)); }
-  ;
 
 /* TODO: Add unary operators */
 ident-expr:
   IDENT ident-binary-op literal-expr { $$ = alloc_ident_expr(IdentBinaryExpr($1, $2, $3)); }
   | ident-unary-op IDENT { $$ = alloc_ident_expr(IdentUnaryExpr($1, $2)); }
   | IDENT { $$ = alloc_ident_expr(Identifier($1)); }
-  ;
 
 literal-expr: aexpr { $$ = alloc_literal_expr(ArithmeticExpr($1)); }
   | bexpr { $$ = alloc_literal_expr(BooleanExpr($1)); }
   | sexpr { $$ = alloc_literal_expr(StringExpr($1)); }
-  ;
 
 /* Arithmetic expression */
 aexpr: aexpr '+' aexpr { $$ = alloc_aexpr(BinaryAExpr($1, BinaryOp_Add, $3)); }
@@ -164,7 +153,6 @@ aexpr: aexpr '+' aexpr { $$ = alloc_aexpr(BinaryAExpr($1, BinaryOp_Add, $3)); }
   | '-' aexpr %prec UMINUS { $$ = alloc_aexpr(UnaryAExpr(UnaryOp_Minus, $2)); }
   | '(' aexpr ')'      { $$ = $2;                       }
   | NUMBER             { $$ = alloc_aexpr(Number($1));  }
-  ;
 
 /* Boolean exression */
 bexpr:
@@ -179,11 +167,7 @@ bexpr:
   | '!' bexpr { $$ = alloc_bexpr(NegatedBoolExpr($2)); }
   | TRUE      { $$ = alloc_bexpr(Boolean(true));       }
   | FALSE     { $$ = alloc_bexpr(Boolean(false));      }
-  ;
 
 sexpr: STRING { $$ = alloc_sexpr(String($1)); }
   | sexpr '+' sexpr { $$ = alloc_sexpr(StringConcat($1, $3)); }
   /* TODO: Add == */
-  ;
-
-%%
