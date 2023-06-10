@@ -142,7 +142,6 @@ ident-unary-op: '!' { $$ = IdentUOp_Exclamation; }
 expr: literal-expr { $$ = alloc_expr(LiteralExpression($1)); }
   | ident-expr { $$ = alloc_expr(IdentExpression($1)); }
 
-/* TODO: Add unary operators */
 ident-expr:
   IDENT ident-binary-op literal-expr { $$ = alloc_ident_expr(IdentBinaryExpr($1, $2, $3)); }
   | ident-unary-op IDENT { $$ = alloc_ident_expr(IdentUnaryExpr($1, $2)); }

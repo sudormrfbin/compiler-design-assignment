@@ -1,0 +1,89 @@
+program: stmt-list 
+  | eol stmt-list  
+
+eol: EOL
+  | eol EOL
+
+stmt-list: stmt 
+  | stmt-list stmt 
+
+stmt: expr-stmt
+  | display-stmt
+  | if-stmt
+  | while-stmt
+  | for-stmt
+  | assign-stmt
+
+assign-stmt: IDENT '=' expr eol 
+
+display-stmt: DISPLAY expr eol 
+
+if-stmt: IF expr then-clause else-if-chain else-clause ENDIF eol 
+
+then-clause: THEN eol stmt-list 
+
+else-if-chain: %empty 
+  | else-if-chain ELSE IF expr then-clause 
+
+else-clause: %empty 
+  | ELSE eol stmt-list 
+
+while-stmt: WHILE expr DO eol stmt-list ENDWHILE eol 
+
+for-stmt: FOR IDENT '=' expr[start] TO expr[end] DO eol stmt-list ENDFOR eol 
+
+expr-stmt: expr eol 
+
+ident-binary-op: '+' 
+  | '-'  
+  | '*'  
+  | '/'  
+  | GT   
+  | GTE  
+  | LT   
+  | LTE  
+  | EQEQ 
+  | AND  
+  | OR   
+
+ident-unary-op: '!' 
+  | '-' 
+
+expr: literal-expr 
+  | ident-expr 
+
+ident-expr:
+  IDENT ident-binary-op literal-expr 
+  | ident-unary-op IDENT 
+  | IDENT 
+
+literal-expr: aexpr 
+  | bexpr 
+  | sexpr 
+
+/* Arithmetic expression */
+aexpr: aexpr '+' aexpr 
+  | aexpr '-' aexpr    
+  | aexpr '*' aexpr    
+  | aexpr '/' aexpr    
+  | '-' aexpr %prec UMINUS 
+  | '(' aexpr ')'      
+  | NUMBER             
+
+/* Boolean exression */
+bexpr:
+    aexpr EQEQ aexpr 
+  | aexpr GT   aexpr 
+  | aexpr GTE  aexpr 
+  | aexpr LT   aexpr 
+  | aexpr LTE  aexpr 
+  | bexpr AND  bexpr 
+  | bexpr OR   bexpr 
+  | bexpr EQEQ bexpr 
+  | '!' bexpr 
+  | TRUE      
+  | FALSE     
+
+sexpr: STRING 
+  | sexpr '+' sexpr 
+  /* TODO: Add == */

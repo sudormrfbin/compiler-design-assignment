@@ -7,3 +7,6 @@ build:
 r: run
 run: build
 	./parser
+
+grammar: parser.y
+	sed -n '/%%/,$$p' parser.y | tail -n +3 | sed ':a; /{[^}]*}$$/!{N; ba}; s/{[^}]*}//g' > grammar.ebnf
