@@ -98,16 +98,16 @@ assign-stmt: IDENT '=' expr eol { $$ = alloc_stmt(AssignStmt($1, $expr)); }
 
 display-stmt: DISPLAY expr eol { $$ = alloc_stmt(DisplayStmt($expr)); }
 
-if-stmt: IF bexpr then-clause else-if-chain else-clause ENDIF eol {
-    $$ = alloc_stmt(IfStmt($bexpr, $[then-clause], $[else-if-chain], $[else-clause]));
+if-stmt: IF expr then-clause else-if-chain else-clause ENDIF eol {
+    $$ = alloc_stmt(IfStmt($expr, $[then-clause], $[else-if-chain], $[else-clause]));
   }
 
 then-clause: THEN eol stmt-list { $$ = $[stmt-list]; }
 
 // TODO: use then-clause here
 else-if-chain: { $$ = NULL; }
-  | else-if-chain ELSE IF bexpr THEN eol stmt-list {
-    add_else_if(&$1, $bexpr, $[stmt-list]);
+  | else-if-chain ELSE IF expr THEN eol stmt-list {
+    add_else_if(&$1, $expr, $[stmt-list]);
     $$ = $1;
   }
   ;

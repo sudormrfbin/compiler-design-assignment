@@ -507,6 +507,17 @@ void free_expr(Expr* ast) {
 
 /* ----------------------------- Statement ----------------------------- */
 
+bool eval_to_condition(Expr* expr) {
+  ExprResult evaled = eval_expr(expr);
+  match (evaled) {
+    of(BooleanResult, boolean) return *boolean;
+    otherwise { runtime_error("if condition must evaluate to a boolean"); }
+  }
+
+  unreachable("eval_to_condition");
+  return false;
+}
+
 void eval_stmt(Stmt* stmt) {
   match (*stmt) {
     of(DisplayStmt, expr) {
@@ -522,7 +533,7 @@ void eval_stmt(Stmt* stmt) {
       add_symbol(&symtab, *ident, eval_expr(*value));
     }
     of(IfStmt, condition, true_stmts, else_if, else_stmts) {
-      if (eval_bexpr(*condition)) {
+      if (eval_to_condition(*condition)) {
         eval_stmt_list(*true_stmts);
       } else {
         bool else_if_did_exec = eval_else_if(*else_if);
@@ -556,7 +567,7 @@ void print_stmt(Stmt *ast, int ind) {
       iprintf(ind, "IfStatement(\n");
 
       iprintf(ind + 1, "Condition(\n");
-      print_bexpr(*condition, ind + 2);
+      print_expr(*condition, ind + 2);
       iprintf(ind + 1, ")\n");
 
       iprintf(ind + 1, "TrueStatements(\n");
@@ -587,7 +598,7 @@ void free_stmt(Stmt* ast) {
       free_expr(*value);
     }
     of(IfStmt, condition, true_stmts, else_if, else_stmts) {
-      free_bexpr(*condition);
+      free_expr(*condition);
       free_stmt_list(*true_stmts);
       free_else_if(*else_if);
       free_stmt_list(*else_stmts);
@@ -621,7 +632,7 @@ void add_else_if(ElseIfStatement** start, Condition* cond, TrueStatements* stmts
 
 bool eval_else_if(ElseIfStatement* stmt) {
   while (stmt) {
-    if (eval_bexpr(stmt->condition)) {
+    if (eval_to_condition(stmt->condition)) {
       eval_stmt_list(stmt->true_stmts);
       return true;
     }
@@ -633,7 +644,7 @@ bool eval_else_if(ElseIfStatement* stmt) {
 
 void free_else_if(ElseIfStatement* stmt) {
   while (stmt) {
-    free_bexpr(stmt->condition);
+    free_expr(stmt->condition);
     free_stmt_list(stmt->true_stmts);
     stmt = stmt->next;
   }
@@ -644,7 +655,7 @@ void print_else_if(ElseIfStatement* stmt, int ind) {
     iprintf(ind, "ElseIfStatement(\n");
 
     iprintf(ind + 1, "Condition(\n");
-    print_bexpr(stmt->condition, ind + 2);
+    print_expr(stmt->condition, ind + 2);
     iprintf(ind + 1, ")\n");
 
     iprintf(ind + 1, "TrueStatements(\n");

@@ -93,7 +93,11 @@ datatype(
   (IdentExpression, IdentExpr*)
 );
 
-typedef BoolExpr Condition;
+typedef Expr Condition;
+
+/* Ensure that an expression evaluates to a boolean */
+bool eval_to_condition(Expr* expr);
+
 typedef StatementList TrueStatements;
 typedef StatementList ElseStatements;
 typedef struct ElseIfStatement ElseIfStatement;
