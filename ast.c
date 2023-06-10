@@ -675,6 +675,26 @@ void eval_stmt(Stmt* stmt) {
         eval_stmt_list(*true_stmts);
       }
     }
+    of(ForStmt, ident, from, to, stmts) {
+      ExprResult from_expr = eval_expr(*from);
+      ExprResult to_expr = eval_expr(*to);
+
+      if (!MATCHES(from_expr, NumberResult)) {
+        runtime_error("start variable should be a number in for loop");
+      }
+      if (!MATCHES(to_expr, NumberResult)) {
+        runtime_error("for loop end should be a number");
+      }
+
+      ifLet(from_expr, NumberResult, from_num) {
+        ifLet(to_expr, NumberResult, to_num) {
+          for (int i = *from_num; i <= *to_num; i++) {
+            add_symbol(&symtab, *ident, NumberResult(i));
+            eval_stmt_list(*stmts);
+          }
+        }
+      }
+    }
   }
 }
 
@@ -719,6 +739,19 @@ void print_stmt(Stmt *ast, int ind) {
 
       iprintf(ind + 1, "TrueStatements\n");
       print_stmt_list(*true_stmts, ind + 2);
+    }
+    of(ForStmt, ident, from, to, stmts) {
+      iprintf(ind, "ForStatement\n");
+      iprintf(ind + 1, "Variable(\"%s\")\n", *ident);
+
+      iprintf(ind + 1, "From\n");
+      print_expr(*from, ind + 2);
+
+      iprintf(ind + 1, "To\n");
+      print_expr(*to, ind + 2);
+
+      iprintf(ind + 1, "LoopStatements\n");
+      print_stmt_list(*stmts, ind + 2);
     }
   }
 }
@@ -802,6 +835,47 @@ void ir_stmt(Stmt* stmt) {
 
       printf("L%d:\n", done_label);
     }
+    of(ForStmt, ident, from, to, stmts) {
+      // Consider a for statement like so:
+      // ```
+      // for i = 1 to 10 do
+      //   stmts
+      // endfor
+      // rest_of_program
+      // ```
+      // 
+      // Then the corresponding 3 address code will be:
+      //
+      // ```
+      // LBEGIN:
+      // i = 1
+      // t0 = 10
+      // if i <= t0 goto LTRUE
+      // goto LDONE
+      // LTRUE:
+      // stmts
+      // i = i + 1
+      // goto LBEGIN
+      // LDONE:
+      // rest_of_program
+      // ```
+      int begin_label = IR_LABEL_IDX++;
+      printf("L%d:\n", begin_label);
+
+      printf("%s = t%d", *ident, ir_expr(*from));
+      int true_label = IR_LABEL_IDX++;
+      printf("if %s <= t%d goto L%d\n", *ident, ir_expr(*to), true_label);
+
+      int done_label = IR_LABEL_IDX++;
+      printf("goto L%d\n", done_label);
+
+      printf("L%d:\n", true_label);
+      ir_stmt_list(*stmts);
+      printf("%s = %s + 1", *ident, *ident);
+      printf("goto L%d\n", begin_label);
+
+      printf("L%d:\n", done_label);
+    }
   }
 }
 
@@ -822,6 +896,12 @@ void free_stmt(Stmt* ast) {
     of(WhileStmt, condition, true_stmts) {
       free_expr(*condition);
       free_stmt_list(*true_stmts);
+    }
+    of(ForStmt, ident, from, to, stmts) {
+      free(*ident);
+      free_expr(*from);
+      free_expr(*to);
+      free_stmt_list(*stmts);
     }
   }
 }

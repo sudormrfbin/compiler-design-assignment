@@ -100,6 +100,8 @@ bool eval_to_condition(Expr* expr);
 
 typedef StatementList TrueStatements;
 typedef StatementList ElseStatements;
+typedef Expr FromArithExpr;
+typedef Expr ToArithExpr;
 typedef struct ElseIfStatement ElseIfStatement;
 
 struct ElseIfStatement {
@@ -115,7 +117,8 @@ datatype(
   (ExprStmt, Expr*),
   (AssignStmt, char*, Expr*),
   (IfStmt, Condition*, TrueStatements*, ElseIfStatement*, ElseStatements*),
-  (WhileStmt, Condition*, TrueStatements*)
+  (WhileStmt, Condition*, TrueStatements*),
+  (ForStmt, char*, FromArithExpr*, ToArithExpr*, StatementList*)
 );
 
 struct StatementList {

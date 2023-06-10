@@ -48,6 +48,10 @@ we disable this functionality using noyywrap.
 "do"       return DO;
 "endwhile" return ENDWHILE;
 
+"for"      return FOR;
+"to"       return TO;
+"endfor"   return ENDFOR;
+
 \n         return EOL;
 
 [ \t]      /* ignore whitespace */
