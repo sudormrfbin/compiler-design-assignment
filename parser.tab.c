@@ -535,7 +535,7 @@ static const yytype_uint8 yyrline[] =
      133,   134,   135,   136,   139,   140,   143,   144,   149,   150,
      151,   154,   155,   156,   160,   161,   162,   163,   164,   165,
      166,   171,   172,   173,   174,   175,   176,   177,   178,   179,
-     180,   181,   183,   184
+     180,   181,   184,   185
 };
 #endif
 
@@ -1998,13 +1998,13 @@ yyreduce:
     break;
 
   case 62: /* sexpr: STRING  */
-#line 183 "parser.y"
+#line 184 "parser.y"
               { (yyval.str_expr) = alloc_sexpr(String((yyvsp[0].string))); }
 #line 2004 "parser.tab.c"
     break;
 
   case 63: /* sexpr: sexpr '+' sexpr  */
-#line 184 "parser.y"
+#line 185 "parser.y"
                     { (yyval.str_expr) = alloc_sexpr(StringConcat((yyvsp[-2].str_expr), (yyvsp[0].str_expr))); }
 #line 2010 "parser.tab.c"
     break;
@@ -2245,5 +2245,5 @@ yyreturnlab:
   return yyresult;
 }
 
-#line 188 "parser.y"
+#line 189 "parser.y"
 

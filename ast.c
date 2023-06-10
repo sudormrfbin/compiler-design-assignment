@@ -11,6 +11,9 @@ extern SymbolTable* symtab;
 extern FILE* yyin;
 extern StatementList* parse_result;
 
+int IR_TEMP_IDX = 0;
+int IR_LABEL_IDX = 0;
+
 // Prints 2 * level number of spaces
 void print_indent(int level) {
   for (int i=1; i<=level; i++) printf("  "); 
@@ -134,6 +137,42 @@ void print_aexpr(ArithExpr* ast, int ind) {
   ind--;
 }
 
+int assign_temp_ir(const char* fmt, ...) {
+  va_list ap;
+  va_start(ap, fmt);
+
+  printf("t%d = ", IR_TEMP_IDX);
+  vprintf(fmt, ap);
+  printf("\n");
+  return IR_TEMP_IDX++;
+}
+
+
+int ir_aexpr(ArithExpr* ast) {
+  match(*ast) {
+    of(BinaryAExpr, left, op, right) {
+      int l = ir_aexpr(*left);
+      int r = ir_aexpr(*right);
+      switch (*op) {
+        case BinaryOp_Add: return assign_temp_ir("t%d + t%d", l, r);
+        case BinaryOp_Sub: return assign_temp_ir("t%d - t%d", l, r);
+        case BinaryOp_Mul: return assign_temp_ir("t%d * t%d", l, r);
+        case BinaryOp_Div: return assign_temp_ir("t%d / t%d", l, r);
+      }
+    }
+    of(UnaryAExpr, op, right) {
+      switch (*op) {
+        case UnaryOp_Minus: return assign_temp_ir("- t%d", ir_aexpr(*right));
+      }
+    }
+    of(Number, num) {
+      return assign_temp_ir("%g", *num);
+    }; 
+  }
+  unreachable("ir_aexpr");
+  return -1;
+}
+
 void free_aexpr(ArithExpr* ast) {
   match(*ast) {
     of(BinaryAExpr, left, _, right) {
@@ -223,6 +262,36 @@ void print_bexpr(BoolExpr* ast, int ind) {
   }
 }
 
+int ir_bexpr(BoolExpr* ast) {
+  match (*ast) {
+    of(RelationalArithExpr, left, relop, right) {
+      int l = ir_aexpr(*left);
+      int r = ir_aexpr(*right);
+      switch (*relop) {
+        case RelationalEqual: return assign_temp_ir("t%d == t%d", l, r);
+        case Greater:         return assign_temp_ir("t%d > t%d", l, r);
+        case GreaterOrEqual:  return assign_temp_ir("t%d >= t%d", l, r);
+        case Less:            return assign_temp_ir("t%d < t%d", l, r);
+        case LessOrEqual:     return assign_temp_ir("t%d <= t%d", l, r);
+      }
+    }
+    of(LogicalBoolExpr, left, logicalop, right) {
+      int l = ir_bexpr(*left);
+      int r = ir_bexpr(*right);
+      switch (*logicalop) {
+        case And: return assign_temp_ir("t%d && t%d", l, r);
+        case Or: return assign_temp_ir("t%d || t%d", l, r);
+        case LogicalEqual: return assign_temp_ir("t%d == t%d", l, r);
+      }
+    }
+    of(NegatedBoolExpr, bexpr) return assign_temp_ir("! t%d", ir_bexpr(*bexpr));
+    of(Boolean, boolean) return assign_temp_ir("%s", *boolean ? "true" : "false");
+  }
+
+  unreachable("ir_bexpr");
+  return -1;
+}
+
 void free_bexpr(BoolExpr* ast) {
   match (*ast) {
     of(RelationalArithExpr, left, _, right) {
@@ -267,6 +336,20 @@ void print_sexpr(StrExpr* ast, int ind) {
   }
 }
 
+int ir_sexpr(StrExpr* ast) {
+  match (*ast) {
+    of(StringConcat, first, second) {
+      int left = ir_sexpr(*first);
+      int right = ir_sexpr(*second);
+      return assign_temp_ir("t%d + t%d", left, right);
+    }
+    of(String, str) return assign_temp_ir("\"%s\"", *str);
+  }
+
+  unreachable("ir_sexpr");
+  return -1;
+}
+
 void free_sexpr(StrExpr* ast) {
   match (*ast) {
     of(StringConcat, first, second) {
@@ -305,6 +388,17 @@ void print_literal_expr(LiteralExpr* ast, int ind) {
       print_sexpr(*sexpr, ind);
     }
   }
+}
+
+int ir_literal_expr(LiteralExpr* expr) {
+  match (*expr) {
+    of(BooleanExpr, bexpr) return ir_bexpr(*bexpr);
+    of(ArithmeticExpr, aexpr) return ir_aexpr(*aexpr);
+    of(StringExpr, sexpr) return ir_sexpr(*sexpr);
+  }
+
+  unreachable("ir_literal_expr");
+  return -1;
 }
 
 void free_literal_expr(LiteralExpr* ast) {
@@ -417,6 +511,37 @@ ExprResult eval_ident_expr(IdentExpr* expr) {
   return BooleanResult(false);
 }
 
+int ir_ident_expr(IdentExpr* expr) {
+  match (*expr) {
+    of(IdentBinaryExpr, ident, op, expr) {
+      int r = ir_literal_expr(*expr);
+      switch (*op) {
+        case IdentBOp_Plus:  return assign_temp_ir("%s + t%d", *ident, r);
+        case IdentBOp_Minus: return assign_temp_ir("%s - t%d", *ident, r);
+        case IdentBOp_Star:  return assign_temp_ir("%s * t%d", *ident, r);
+        case IdentBOp_Slash: return assign_temp_ir("%s / t%d", *ident, r);
+        case IdentBOp_Gt:    return assign_temp_ir("%s > t%d", *ident, r);
+        case IdentBOp_Gte:   return assign_temp_ir("%s >= t%d", *ident, r);
+        case IdentBOp_Lt:    return assign_temp_ir("%s < t%d", *ident, r);
+        case IdentBOp_Lte:   return assign_temp_ir("%s <= t%d", *ident, r);
+        case IdentBOp_EqEq:  return assign_temp_ir("%s == t%d", *ident, r);
+        case IdentBOp_And:   return assign_temp_ir("%s && t%d", *ident, r);
+        case IdentBOp_Or:    return assign_temp_ir("%s || t%d", *ident, r);
+      }
+    }
+    of(IdentUnaryExpr, op, ident) {
+      switch (*op) {
+        case IdentUOp_Minus: return assign_temp_ir("- %s", *ident);
+        case IdentUOp_Exclamation: return assign_temp_ir("! %s", *ident);
+      }
+    }
+    of(Identifier, ident) return assign_temp_ir("%s", *ident);
+  }
+
+  unreachable("ir_ident_expr");
+  return -1;
+}
+
 void print_ident_expr(IdentExpr* ast, int ind) {
   match (*ast) {
     of(IdentBinaryExpr, ident, op, expr) {
@@ -489,6 +614,16 @@ void print_expr(Expr* ast, int ind) {
     of(LiteralExpression, lexpr) print_literal_expr(*lexpr, ind);
     of(IdentExpression, iexpr) print_ident_expr(*iexpr, ind);
   }
+}
+
+int ir_expr(Expr* expr) {
+  match (*expr) {
+    of(LiteralExpression, lexpr) return ir_literal_expr(*lexpr);
+    of(IdentExpression, iexpr) return ir_ident_expr(*iexpr);
+  }
+
+  unreachable("ir_expr");
+  return -1;
 }
 
 void free_expr(Expr* ast) {
@@ -584,6 +719,88 @@ void print_stmt(Stmt *ast, int ind) {
 
       iprintf(ind + 1, "TrueStatements\n");
       print_stmt_list(*true_stmts, ind + 2);
+    }
+  }
+}
+
+void ir_stmt(Stmt* stmt) {
+  match (*stmt) {
+    of(DisplayStmt, expr) printf("display t%d\n", ir_expr(*expr));
+    of(ExprStmt, expr) ir_expr(*expr); 
+    of(AssignStmt, ident, value) printf("%s = t%d\n", *ident, ir_expr(*value));
+    of(IfStmt, condition, true_stmts, else_if, else_stmts) {
+      // Consider an if conditional like so:
+      // ```
+      // if cond then
+      //   true_stmts
+      // else
+      //   else_stmts
+      // endif
+      // rest_of_program
+      // ```
+      // 
+      // Then the corresponding 3 address code will be:
+      //
+      // ```
+      // if cond == true goto LTRUE
+      // else_stmts
+      // goto LDONE
+      // LTRUE:
+      // true_stmts
+      // LDONE:
+      // rest_of_program
+      // ```
+
+      // TODO: Handle else if
+      int true_label = IR_LABEL_IDX++;
+      printf("if t%d == true goto L%d\n", ir_expr(*condition), true_label);
+
+      if (*else_stmts) {
+        ir_stmt_list(*else_stmts);
+      }
+
+      int done_label = IR_LABEL_IDX++;
+      printf("goto L%d\n", done_label);
+
+      printf("L%d:\n", true_label);
+      ir_stmt_list(*true_stmts);
+      printf("L%d:\n", done_label);
+    }
+    of(WhileStmt, condition, true_stmts) {
+      // Consider a while statement like so:
+      // ```
+      // while cond do
+      //   true_stmts
+      // endwhile
+      // rest_of_program
+      // ```
+      // 
+      // Then the corresponding 3 address code will be:
+      //
+      // ```
+      // LBEGIN:
+      // if cond == true goto LTRUE
+      // goto LDONE
+      // LTRUE:
+      // true_stmts
+      // goto LBEGIN
+      // LDONE:
+      // rest_of_program
+      // ```
+      int begin_label = IR_LABEL_IDX++;
+      printf("L%d:\n", begin_label);
+
+      int true_label = IR_LABEL_IDX++;
+      printf("if t%d == true goto L%d\n", ir_expr(*condition), true_label);
+
+      int done_label = IR_LABEL_IDX++;
+      printf("goto L%d\n", done_label);
+
+      printf("L%d:\n", true_label);
+      ir_stmt_list(*true_stmts);
+      printf("goto L%d\n", begin_label);
+
+      printf("L%d:\n", done_label);
     }
   }
 }
@@ -704,6 +921,14 @@ void eval_stmt_list(StatementList* start) {
   }
 }
 
+void ir_stmt_list(StatementList* start) {
+  StatementList* curr = start;
+  while (curr) {
+    ir_stmt(curr->value);
+    curr = curr->next;
+  }
+}
+
 void print_stmt_list(StatementList* start, int ind) {
   StatementList* curr = start;
   while (curr) {
@@ -811,15 +1036,18 @@ int main(int argc, const char **argv) {
   };
 
   int tokens = false;
+  int ir = false;
   int ast = false;
   int show_symtab = false;
 
   // TODO: Add command for 3 address code
   struct argparse_option options[] = {
     OPT_HELP(),
+    OPT_GROUP("Debug options"),
     OPT_BOOLEAN('t', "tokens", &tokens, "print token stream", NULL, 0, 0),
     OPT_BOOLEAN('a', "ast", &ast, "print syntax tree", NULL, 0, 0),
     OPT_BOOLEAN('s', "symtab", &show_symtab, "print symbol table", NULL, 0, 0),
+    OPT_BOOLEAN('i', "ir", &ir, "print 3 address intermediate code", NULL, 0, 0),
     OPT_END(),
   };
 
@@ -849,6 +1077,12 @@ int main(int argc, const char **argv) {
     free_stmt_list(parse_result);
   }
 
+  if (ir != 0) {
+    yyparse();
+    ir_stmt_list(parse_result);
+    free_stmt_list(parse_result);
+  }
+
   if (show_symtab != 0) {
     yyparse();
     eval_stmt_list(parse_result);
@@ -857,7 +1091,7 @@ int main(int argc, const char **argv) {
     free_symtab(symtab);
   }
 
-  if (!(tokens || ast || show_symtab)) {
+  if (!(tokens || ast || show_symtab || ir)) {
     yyparse();
     eval_stmt_list(parse_result);
     free_stmt_list(parse_result);

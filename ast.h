@@ -127,8 +127,9 @@ struct StatementList {
 StatementList* alloc_stmt_list();
 void add_stmt_list(StatementList** start, Stmt* stmt);
 void eval_stmt_list(StatementList* stmts);
-void free_stmt_list(StatementList* stmts);
 void print_stmt_list(StatementList* ast, int indent);
+void ir_stmt_list(StatementList* stmts);
+void free_stmt_list(StatementList* stmts);
 
 datatype(
   ExprResult,
@@ -137,40 +138,46 @@ datatype(
   (StringResult, char*)
 );
 
-// TODO: Rename to alloc_* and free_*
 ArithExpr* alloc_aexpr(ArithExpr ast);
 double eval_aexpr(ArithExpr* ast);
 void print_aexpr(ArithExpr* ast, int indent);
+int ir_aexpr(ArithExpr* ast);
 void free_aexpr(ArithExpr* ast);
 
 BoolExpr* alloc_bexpr(BoolExpr ast);
 bool eval_bexpr(BoolExpr* ast);
 void print_bexpr(BoolExpr* ast, int indent);
+int ir_bexpr(BoolExpr* ast);
 void free_bexpr(BoolExpr* ast);
 
 StrExpr* alloc_sexpr(StrExpr ast);
 char* eval_sexpr(StrExpr* ast);
 void print_sexpr(StrExpr* ast, int indent);
+int ir_sexpr(StrExpr* ast);
 void free_sexpr(StrExpr* ast);
 
 LiteralExpr* alloc_literal_expr(LiteralExpr ast);
 ExprResult eval_literal_expr(LiteralExpr *);
 void print_literal_expr(LiteralExpr* ast, int indent);
+int ir_literal_expr(LiteralExpr* ast);
 void free_literal_expr(LiteralExpr* ast);
 
 IdentExpr* alloc_ident_expr(IdentExpr ast);
 ExprResult eval_ident_expr(IdentExpr *);
 void print_ident_expr(IdentExpr* ast, int indent);
+int ir_ident_expr(IdentExpr* ast);
 void free_ident_expr(IdentExpr* ast);
 
 Expr* alloc_expr(Expr ast);
 ExprResult eval_expr(Expr *);
 void print_expr(Expr* ast, int indent);
+int ir_expr(Expr* ast);
 void free_expr(Expr* ast);
 
 Stmt* alloc_stmt(Stmt ast);
 void eval_stmt(Stmt* ast);
 void print_stmt(Stmt* ast, int indent);
+void ir_stmt(Stmt* ast);
 void free_stmt(Stmt* ast);
 
 ElseIfStatement* alloc_else_if(Condition* cond, TrueStatements* stmts);

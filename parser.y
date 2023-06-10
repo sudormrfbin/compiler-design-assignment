@@ -179,6 +179,7 @@ bexpr:
   | '!' bexpr { $$ = alloc_bexpr(NegatedBoolExpr($2)); }
   | TRUE      { $$ = alloc_bexpr(Boolean(true));       }
   | FALSE     { $$ = alloc_bexpr(Boolean(false));      }
+  ;
 
 sexpr: STRING { $$ = alloc_sexpr(String($1)); }
   | sexpr '+' sexpr { $$ = alloc_sexpr(StringConcat($1, $3)); }
