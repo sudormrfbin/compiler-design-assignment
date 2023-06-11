@@ -10,6 +10,7 @@
 extern SymbolTable* symtab;
 extern FILE* yyin;
 extern StatementList* parse_result;
+extern int yylex();
 
 int IR_TEMP_IDX = 0;
 int IR_LABEL_IDX = 0;
@@ -1100,6 +1101,53 @@ void free_symtab(SymbolTable* head) {
 
 /* ---------------------------------------------------------------------- */
 
+void scan_and_print_tokens() {
+  int token;
+  while ((token = yylex())) {
+    switch (token) {
+      case NUMBER: printf("NUMBER(%g) ", yylval.number); break;
+      case STRING: printf("STRING(%s) ", yylval.string); break;
+      case IDENT: printf("IDENT(%s) ", yylval.ident); break;
+
+      case EOL: printf("EOL\n"); break;
+
+      case GT: printf("Op(GT) "); break;
+      case GTE: printf("Op(GTE) "); break;
+      case LT: printf("Op(LT) "); break;
+      case LTE: printf("Op(LTE) "); break;
+      case '!': printf("Op(!) "); break;
+      case '-': printf("Op(-) "); break;
+      case '+': printf("Op(+) "); break;
+      case '*': printf("Op(*) "); break;
+      case '/': printf("Op(/) "); break;
+      case '=': printf("Op(=) "); break;
+      case EQEQ: printf("Op(EQEQ) "); break;
+      case AND: printf("Op(AND) "); break;
+      case OR: printf("Op(OR) "); break;
+
+      case TRUE: printf("Boolean(TRUE) "); break;
+      case FALSE: printf("Boolean(FALSE) "); break;
+
+      case DISPLAY: printf("Builtin(DISPLAY) "); break;
+
+      case IF: printf("Keyword(IF) "); break;
+      case THEN: printf("Keyword(THEN) "); break;
+      case ELSE: printf("Keyword(ELSE) "); break;
+      case ENDIF: printf("Keyword(ENDIF) "); break;
+      case DO: printf("Keyword(DO) "); break;
+      case WHILE: printf("Keyword(WHILE) "); break;
+      case ENDWHILE: printf("Keyword(ENDWHILE) "); break;
+      case FOR: printf("Keyword(FOR) "); break;
+      case TO: printf("Keyword(TO) "); break;
+      case ENDFOR: printf("Keyword(ENDFOR) "); break;
+
+      default: printf("Unknown(%d) ", token);
+    }
+  }
+}
+
+/* ---------------------------------------------------------------------- */
+
 void yyerror(const char *s, ...) {
   va_list ap;
   va_start(ap, s);
@@ -1111,8 +1159,8 @@ void yyerror(const char *s, ...) {
 
 int main(int argc, const char **argv) {
   static const char *const usages[] = {
-      "psuedoc [options] filename",
-      NULL,
+    "psuedoc [options] filename",
+    NULL,
   };
 
   int tokens = false;
@@ -1120,7 +1168,6 @@ int main(int argc, const char **argv) {
   int ast = false;
   int show_symtab = false;
 
-  // TODO: Add command for 3 address code
   struct argparse_option options[] = {
     OPT_HELP(),
     OPT_GROUP("Debug options"),
@@ -1147,8 +1194,7 @@ int main(int argc, const char **argv) {
   }
 
   if (tokens != 0) {
-    printf("Token printing not yet implemented\n");
-    exit(1);
+    scan_and_print_tokens();
   }
 
   if (ast != 0) {

@@ -52,8 +52,7 @@ int yylex();
 %type <else_if> else-if-chain
 
 %token EOL
-%token GT GTE LT LTE EQEQ
-%token AND OR
+%token GT GTE LT LTE
 %token TRUE FALSE
 %token DISPLAY
 %token IF THEN ELSE ENDIF
