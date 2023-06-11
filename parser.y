@@ -175,4 +175,3 @@ bexpr:
 
 sexpr: STRING { $$ = alloc_sexpr(String($1)); }
   | sexpr '+' sexpr { $$ = alloc_sexpr(StringConcat($1, $3)); }
-  /* TODO: Add == */

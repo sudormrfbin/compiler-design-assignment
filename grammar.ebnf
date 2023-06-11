@@ -86,4 +86,3 @@ bexpr:
 
 sexpr: STRING 
   | sexpr '+' sexpr 
-  /* TODO: Add == */

@@ -1032,9 +1032,8 @@ void free_stmt_list(StatementList* start) {
 
 Symbol* alloc_symbol(char* name, ExprResult value) {
 
-  // TODO: Add commands for printing tokens, ast, 3 address code, symtab
   Symbol* alloc = malloc(sizeof(Symbol));
-  // TODO: ensure_non_null
+  ensure_non_null(alloc, "out of space");
   alloc->name = strdup(name);
   alloc->value = value;
   alloc->next = NULL;
