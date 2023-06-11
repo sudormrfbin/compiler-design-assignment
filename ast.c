@@ -848,9 +848,9 @@ void ir_stmt(Stmt* stmt) {
       // Then the corresponding 3 address code will be:
       //
       // ```
-      // LBEGIN:
       // i = 1
       // t0 = 10
+      // LBEGIN:
       // if i <= t0 goto LTRUE
       // goto LDONE
       // LTRUE:
@@ -860,10 +860,10 @@ void ir_stmt(Stmt* stmt) {
       // LDONE:
       // rest_of_program
       // ```
+      printf("%s = t%d\n", *ident, ir_expr(*from));
       int begin_label = IR_LABEL_IDX++;
       printf("L%d:\n", begin_label);
 
-      printf("%s = t%d", *ident, ir_expr(*from));
       int true_label = IR_LABEL_IDX++;
       printf("if %s <= t%d goto L%d\n", *ident, ir_expr(*to), true_label);
 
@@ -872,7 +872,7 @@ void ir_stmt(Stmt* stmt) {
 
       printf("L%d:\n", true_label);
       ir_stmt_list(*stmts);
-      printf("%s = %s + 1", *ident, *ident);
+      printf("%s = %s + 1\n", *ident, *ident);
       printf("goto L%d\n", begin_label);
 
       printf("L%d:\n", done_label);

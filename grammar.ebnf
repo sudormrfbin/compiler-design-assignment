@@ -30,7 +30,7 @@ else-clause: %empty
 
 while-stmt: WHILE expr DO eol stmt-list ENDWHILE eol 
 
-for-stmt: FOR IDENT '=' expr[start] TO expr[end] DO eol stmt-list ENDFOR eol 
+for-stmt: FOR IDENT '=' expr TO expr DO eol stmt-list ENDFOR eol 
 
 expr-stmt: expr eol 
 
