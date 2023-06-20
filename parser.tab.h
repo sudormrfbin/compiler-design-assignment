@@ -55,30 +55,21 @@ extern int yydebug;
     YYerror = 256,                 /* error  */
     YYUNDEF = 257,                 /* "invalid token"  */
     NUMBER = 258,                  /* NUMBER  */
-    STRING = 259,                  /* STRING  */
-    IDENT = 260,                   /* IDENT  */
-    EOL = 261,                     /* EOL  */
-    GT = 262,                      /* GT  */
-    GTE = 263,                     /* GTE  */
-    LT = 264,                      /* LT  */
-    LTE = 265,                     /* LTE  */
-    TRUE = 266,                    /* TRUE  */
-    FALSE = 267,                   /* FALSE  */
-    DISPLAY = 268,                 /* DISPLAY  */
-    IF = 269,                      /* IF  */
-    THEN = 270,                    /* THEN  */
-    ELSE = 271,                    /* ELSE  */
-    ENDIF = 272,                   /* ENDIF  */
-    DO = 273,                      /* DO  */
-    WHILE = 274,                   /* WHILE  */
-    ENDWHILE = 275,                /* ENDWHILE  */
-    FOR = 276,                     /* FOR  */
-    TO = 277,                      /* TO  */
-    ENDFOR = 278,                  /* ENDFOR  */
-    EQEQ = 279,                    /* EQEQ  */
-    AND = 280,                     /* AND  */
-    OR = 281,                      /* OR  */
-    UMINUS = 282                   /* UMINUS  */
+    IDENT = 259,                   /* IDENT  */
+    EOL = 260,                     /* EOL  */
+    GT = 261,                      /* GT  */
+    GTE = 262,                     /* GTE  */
+    LT = 263,                      /* LT  */
+    LTE = 264,                     /* LTE  */
+    DISPLAY = 265,                 /* DISPLAY  */
+    IF = 266,                      /* IF  */
+    THEN = 267,                    /* THEN  */
+    ELSE = 268,                    /* ELSE  */
+    ENDIF = 269,                   /* ENDIF  */
+    WHILE = 270,                   /* WHILE  */
+    DO = 271,                      /* DO  */
+    ENDWHILE = 272,                /* ENDWHILE  */
+    EQEQ = 273                     /* EQEQ  */
   };
   typedef enum yytokentype yytoken_kind_t;
 #endif
@@ -87,24 +78,12 @@ extern int yydebug;
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
 union YYSTYPE
 {
-#line 21 "parser.y"
+#line 7 "parser.y"
 
-  StrExpr *str_expr;
-  ArithExpr *arith_expr;
-  BoolExpr *bool_expr;
-  LiteralExpr *literal_expr;
-  IdentBinaryOp ident_bop;
-  IdentUnaryOp ident_uop;
-  IdentExpr *ident_expr;
-  Expr *expr;
-  Stmt *stmt;
-  StatementList *statement_list;
-  ElseIfStatement *else_if;
-  double number;
-  char* string;
+  int number;
   char* ident;
 
-#line 108 "parser.tab.h"
+#line 87 "parser.tab.h"
 
 };
 typedef union YYSTYPE YYSTYPE;
