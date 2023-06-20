@@ -3,4 +3,4 @@ gen:
 	flex lex.l
 
 build: gen
-	gcc -Wextra -Wall -g parser.tab.c lex.yy.c ast.c
+	gcc -Wextra -Wall parser.tab.c lex.yy.c main.c

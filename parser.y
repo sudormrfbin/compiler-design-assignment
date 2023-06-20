@@ -1,13 +1,19 @@
 %{
+#include "main.h"
+#include <stddef.h>
 
 int yylex();
-
 %}
 
 %union {
+  struct AstNode* node;
+  struct AstNodeList* list;
   int number;
   char* ident;
 }
+
+%type <node> expr while_statement if_statement display_statement assign_statement statement
+%type <list> statement_list program
 
 %token <number> NUMBER
 %token <ident>  IDENT
@@ -22,34 +28,53 @@ int yylex();
    through the grammar.
 */
 
-%left EQEQ
+%left EQEQ '>' '<' GTE LTE
 %left '-' '+'
 %left '*' '/'
 
 %%
 
-program: stmt_list
+program:
+  statement_list { evalNodeList($statement_list); }
 
-stmt_list: stmt
-  | stmt_list stmt
+statement_list:
+  statement { $$ = mallocNodeList($statement); }
+  | statement_list statement { addNodeList($1, $statement); }
 
-stmt: display_stmt
-  | if_stmt
-  | while_stmt
-  | assign_stmt
+statement:
+  display_statement
+  | if_statement
+  | while_statement
+  | assign_statement
 
-assign_stmt: IDENT '=' expr EOL
+assign_statement:
+  IDENT '=' expr EOL { $$ = newAssign($1, $expr); }
 
-display_stmt: DISPLAY expr EOL
+display_statement:
+  DISPLAY expr EOL { $$ = newDisplay($expr); }
 
-if_stmt: IF expr THEN EOL stmt_list ENDIF EOL
-  | IF expr THEN EOL stmt_list ELSE EOL stmt_list ENDIF EOL
+if_statement:
+  IF expr THEN EOL statement_list ENDIF EOL {
+    $$ = newIf($expr, $statement_list, NULL);
+  }
+  | IF expr THEN EOL statement_list ELSE EOL statement_list ENDIF EOL {
+    $$ = newIf($expr, $5, $8);
+  }
 
-while_stmt: WHILE expr DO EOL stmt_list ENDWHILE EOL
+while_statement:
+  WHILE expr DO EOL statement_list ENDWHILE EOL {
+    $$ = newWhile($expr, $statement_list);
+  }
 
-expr: expr '+' expr
-  | expr '-' expr
-  | expr '*' expr
-  | expr '/' expr
-  | NUMBER             
-  | IDENT
+expr:
+  expr '+' expr     { $$ = newExpr($1, '+', $3); }
+  | expr '-' expr   { $$ = newExpr($1, '-', $3); }
+  | expr '*' expr   { $$ = newExpr($1, '*', $3); }
+  | expr '/' expr   { $$ = newExpr($1, '/', $3); }
+  | expr '>' expr   { $$ = newExpr($1, '>', $3); }
+  | expr '<' expr   { $$ = newExpr($1, '<', $3); }
+  | expr GTE expr   { $$ = newExpr($1, 'G', $3); }
+  | expr LTE expr   { $$ = newExpr($1, 'L', $3); }
+  | expr EQEQ expr  { $$ = newExpr($1, 'E', $3); }
+  | NUMBER          { $$ = newNumber($1);        }
+  | IDENT           { $$ = newIdent($1);         }

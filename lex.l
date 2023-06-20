@@ -18,11 +18,11 @@ we disable this functionality using noyywrap.
 "-" |
 "*" |
 "/" |
+">" |
+"<" |
 "="        return yytext[0];
 
 "=="       return EQEQ;
-">"        return GT;
-"<"        return LT;
 ">="       return GTE;
 "<="       return LTE;
 
@@ -37,7 +37,7 @@ we disable this functionality using noyywrap.
 "do"       return DO;
 "endwhile" return ENDWHILE;
 
-\n         return EOL;
+\n+        return EOL;
 
 [ \t]      /* ignore whitespace */
 "//".+     /* ignore comments   */
