@@ -1,0 +1,7 @@
+a = 2
+
+if a == 1 then
+	display "a is 1"
+else
+	display "a is not 1"
+endif
