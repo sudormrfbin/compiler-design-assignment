@@ -1,9 +1,0 @@
-start = 1
-n = 2 * 6
-
-for i = 1 to 3 do
-	display "outer loop"
-	for i = 1 to 2 do
-		display "	inner loop"
-	endfor
-endfor
