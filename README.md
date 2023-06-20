@@ -1,13 +1,25 @@
 # Pseudo Lang Compiler
 
-Install `make`, and then run the program with `make run`.
+To compile the compiler:
 
-## Dependencies
+```
+gcc parser.tab.c lex.yy.c main.c
+```
 
-1. [`datatype99`]: Implementation of sum types in pure C to be used to represent and manipulate
-the AST concisely.
+Run with:
 
-The header files are duplicated under the `include/` directory.
+```
+./a.exe filename
+```
 
-[`datatype99`]: https://github.com/Hirrolot/datatype99
-[`cvector`]: https://github.com/eteran/c-vector/
+Sample test file is included as `input.test`.
+
+## Regenerate parser and lexer
+
+To re-generate the parser and lexer (only required if `parser.tab.c` and
+`lex.yy.c` are deleted or if `parser.y` and `lex.l` are modified):
+
+```
+bison -d parser.y
+flex lex.l
+```
