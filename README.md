@@ -1,5 +1,11 @@
 # Pseudo Lang Compiler
 
+A compiler made using C, [flex] and [bison] for a language that reads like pseudo code.
+Also comes with compiler options to print intermediate stages of the compiler to inspect it's inner workings.
+
+[flex]: https://github.com/westes/flex
+[bison]: https://www.gnu.org/software/bison/
+
 ## Dependencies
 
 1. [`datatype99`]: Implementation of sum types in pure C to be used to represent and manipulate
